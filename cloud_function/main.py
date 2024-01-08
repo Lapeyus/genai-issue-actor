@@ -2,6 +2,7 @@ import functions_framework
 import logging
 import json
 import os
+import base64
 
 from autocoder import Autocoder
 
@@ -13,8 +14,8 @@ logger.setLevel(logging.DEBUG)
 project_id = os.getenv('project_id')
 location = os.getenv('location')
 github_pat = os.getenv('github_pat')
-github_private_key = os.getenv("PRIVATE_KEY")
-github_public_key = os.getenv("PUBLIC_KEY")
+github_private_key = base64.b64decode(os.getenv("PRIVATE_KEY")).decode('utf-8')
+github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode('utf-8')
 
 REPO_DIR = 'local_repo'
 
@@ -59,7 +60,7 @@ def handle_issue(request):
 
         contributing = None
         try:
-            contributing = autocoder_app.fetch_repo_file_contents("CONTRIBUTING.md")
+            contributing = autocoder_app._fetch_repo_file_contents("CONTRIBUTING.md")
         except:
             logger.info("No existing CONTRIBUTING.md to use.")
             pass
@@ -67,7 +68,7 @@ def handle_issue(request):
         autocoder_app.create_branch(contributing=contributing, desired_change=issue_body)
         existing_code, updated_code = autocoder_app.apply_code_changes("main.py", issue_body)
         autocoder_app.update_unit_tests("tests/test_main.py", updated_code)
-        commit_message = autocoder_app.create_commit(existing_code=existing_code, replacement_code=updated_code)
+        commit_message = autocoder_app.create_commit(existing_code=existing_code, replacement_code=updated_code, contributing=contributing)
         autocoder_app.push_remote()
         autocoder_app.create_pr(
             repo_id=git_repo_id,
