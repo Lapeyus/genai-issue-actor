@@ -1,3 +1,15 @@
 __pycache__
 .venv
 .DS_Store
+
+function-source.zip
+terraform.tfstate
+*terraform.tfstate.backup
+.terraform/*
+.terraform.lock.hcl
+
+
+.terraform
+cdktf.out
+cdktf.log
+*terraform.*.tfstate*

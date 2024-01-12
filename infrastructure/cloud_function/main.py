@@ -11,9 +11,9 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-project_id = os.getenv('project_id')
-location = os.getenv('location')
-github_pat = os.getenv('github_pat')
+project_id = os.getenv('PROJECT_ID')
+location = os.getenv('LOCATION')
+github_pat = os.getenv('GITHUB_PAT')
 github_private_key = base64.b64decode(os.getenv("PRIVATE_KEY")).decode('utf-8')
 github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode('utf-8')
 
