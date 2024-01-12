@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 REPO_DIR = 'local_repo'
-VERTEX_FOUNDATIONAL_MODEL = 'text-bison@002'
+VERTEX_FOUNDATIONAL_MODEL = "code-bison" #'text-bison@002'
 
 class Autocoder:
 

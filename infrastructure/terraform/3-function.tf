@@ -43,7 +43,7 @@ resource "google_cloudfunctions2_function" "default" {
 
   service_config {
     max_instance_count = 1
-    available_memory   = "1G"
+    available_memory   = "2G"
     timeout_seconds    = 60
     available_cpu      = "1"
 
