@@ -13,3 +13,5 @@ terraform.tfstate
 cdktf.out
 cdktf.log
 *terraform.*.tfstate*
+
+venv/
