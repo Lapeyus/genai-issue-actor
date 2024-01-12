@@ -130,3 +130,5 @@ if col1.button("Generate Query"):
     except Exception as e:
         st.error(f"Error executing query: {e}")
 
+
+st.set_page_config(page_title="Insights", page_icon=":hotel:", layout="wide", initial_sidebar_state="auto")
