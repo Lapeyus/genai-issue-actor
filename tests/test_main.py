@@ -1,56 +1,49 @@
 import unittest
-
 from main import parse_bigquery_schema, format_table
-
+import pandas as pd
 
 class TestBigQuerySchemaParsing(unittest.TestCase):
-    def test_parse_bigquery_schema(self):
-        data = [
+    def setUp(self):
+        self.data = [
             {
                 "page_content": """
-                ddl: CREATE TABLE `bigquery-public-data.github_repos.commits` (
-                  commit SHA256 NOT NULL,
-                  author DATE NOT NULL,
-                  committer DATE NOT NULL,
-                  message STRING(MAX)
-                )
-                OPTIONS (
-                  description = 'Commits in the GitHub public repository.',
-                  labels = ['public', 'github']
-                )
-                """
+ddl: CREATE TABLE `bigquery-public-data.github_repos.commits` (
+  commit SHA256 NOT NULL,
+  author DATE NOT NULL,
+  committer DATE NOT NULL,
+  message STRING(MAX)
+)
+OPTIONS (
+  description = 'Commits in the GitHub public repository.',
+  labels = ['public', 'github']
+)
+"""
             }
         ]
+        self.expected = """
+Table Name: `bigquery-public-data.github_repos.commits`
 
-        expected = """
-        Table Name: `bigquery-public-data.github_repos.commits`
+- commit SHA256 NOT NULL
+- author DATE NOT NULL
+- committer DATE NOT NULL
+- message STRING(MAX)
+"""
 
-        - commit SHA256 NOT NULL
-        - author DATE NOT NULL
-        - committer DATE NOT NULL
-        - message STRING(MAX)
-        """
-
-        actual = parse_bigquery_schema(data)
-
-        self.assertEqual(expected, actual)
-
+    def test_parse_bigquery_schema(self):
+        actual = parse_bigquery_schema(self.data)
+        self.assertEqual(self.expected.strip(), actual.strip())
 
 class TestFormattingTable(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({
+            "name": ["Alice", "Bob", "Carol"],
+            "age": [20, 25, 30],
+        })
+        self.expected = "name:Alice,age:20,name:Bob,age:25,name:Carol,age:30"
+
     def test_format_table(self):
-        df = pd.DataFrame(
-            {
-                "name": ["Alice", "Bob", "Carol"],
-                "age": [20, 25, 30],
-            }
-        )
-
-        expected = "name:Alice,age:20,name:Bob,age:25,name:Carol,age:30"
-
-        actual = format_table(df)
-
-        self.assertEqual(expected, actual)
-
+        actual = format_table(self.df)
+        self.assertEqual(self.expected, actual)
 
 if __name__ == "__main__":
     unittest.main()
