@@ -27,6 +27,13 @@ resource "google_project_service" "cloudbuild_service" {
   disable_dependent_services = true
 }
 
+resource "google_project_service" "aiplatform_service" {
+  project                    = google_project.main.project_id
+  service                    = "aiplatform.googleapis.com"
+  disable_dependent_services = true
+}
+
+
 # # terraform apply -target=google_project_service.monitoring -target=google_project_service.monitoringa -target=google_project_service.monitoringb -target=google_project_service.compute_service -target=google_project_service.container_service -target=google_project_service.cloudbuild_service -target=google_project_service.cloudresourcemanager_service -target=google_project_service.secretmanager_service -target=google_project_service.logging -target=google_project_service.cloudfunctions -target=google_project_service.run -target=google_project_service.cloudscheduler -target=google_project_service.container_a -target=google_project_service.cloudtrace_a -target=google_project_service.container_b -target=google_project_service.cloudtrace_b -target=google_project_service.gkehub_b -target=google_project_service.anthosconfigmanagement -auto-approve
 # ###################################################
 # ###################################################
