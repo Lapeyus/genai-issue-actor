@@ -35,6 +35,18 @@ variable "region" {
 }
 
 
+variable "github_owner" {
+  description = "The region to use for the created resources."
+  type        = string
+  default     = "Lapeyus"
+}
+
+variable "github_repo" {
+  description = "The region to use for the created resources."
+  type        = string
+  default     = "genai-issue-actor"
+}
+
 
 
 
