@@ -172,7 +172,7 @@ class Autocoder:
             replacement_code: str,
             commit_message: str = None,
             contributing: str = None,
-            author_email: str = 'bot@evanseabrook.ca',
+            author_email: str = 'bot@lapeyus.cr',
             author_name: str = 'EvanBot'
     ) -> str:
         """Adds all modified files and creates a commit in the branch. `apply_code_changes` and `update_unit_tests` should be called before calling this.
@@ -183,7 +183,7 @@ class Autocoder:
         :type replacement_code: str
         :param commit_message: The commit message to use -- one will be generated based on the changes found between `existing_code` and `replacement_code` if None provided, defaults to None
         :type commit_message: str, optional
-        :param author_email: The email to use as the git commit author, defaults to 'bot@evanseabrook.ca'
+        :param author_email: The email to use as the git commit author, defaults to 'bot@lapeyus.cr'
         :type author_email: str, optional
         :param author_name: The name to use as the git commit author, defaults to 'EvanBot'
         :type author_name: str, optional
