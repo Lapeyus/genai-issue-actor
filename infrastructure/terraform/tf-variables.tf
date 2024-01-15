@@ -34,7 +34,6 @@ variable "region" {
   default     = "us-central1"
 }
 
-
 variable "github_owner" {
   description = "The region to use for the created resources."
   type        = string
@@ -47,44 +46,8 @@ variable "github_repo" {
   default     = "genai-issue-actor"
 }
 
-
-
-
-
-
-
-# variable "service_account_id" {
-#   description = "ID for the service account."
-#   type        = string
-#   default     = "genai"
-# }
-
-# variable "service_account_display_name" {
-#   description = "Display name for the service account."
-#   type        = string
-#   default     = "genai"
-# }
-
-# variable "vpc_name" {
-#   description = "Name for the VPC."
-#   type        = string
-#   default     = "genai"
-# }
-
-# variable "subnet_name" {
-#   description = "Name for the subnet."
-#   type        = string
-#   default     = "genai"
-# }
-
-# variable "subnet_cidr" {
-#   description = "CIDR range for the subnet."
-#   type        = string
-#   default     = "10.0.0.0/16" #22
-# }
-
-# variable "trusted_sources" {
-#   description = "CIDR ranges that are allowed to communicate with the GKE nodes."
-#   type        = list(string)
-#   default     = ["0.0.0.0/0"]
-# }
+variable "llm" {
+  description = "llm"
+  type        = string
+  default     = "text-bison@002"
+}

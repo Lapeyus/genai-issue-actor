@@ -2,26 +2,25 @@ import pygit2
 import logging
 import shutil
 import github
-
 import vertexai
+
 from vertexai.language_models import TextGenerationModel
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 REPO_DIR = 'local_repo'
-VERTEX_FOUNDATIONAL_MODEL = "code-bison" #'text-bison@002'
 
 class Autocoder:
-
     def __init__(
-            self,
-            gcp_project: str,
-            gcp_location: str,
-            git_private_key: str,
-            git_public_key: str,
-            git_pat: str,
-            git_key_passphrase: str = ""
+        self,
+        gcp_project: str,
+        gcp_location: str,
+        git_private_key: str,
+        git_public_key: str,
+        git_pat: str,
+        git_key_passphrase: str = "",
+        llm: str = "",
     ):
         self.git_private_key = git_private_key
         self.git_public_key = git_public_key
@@ -30,7 +29,7 @@ class Autocoder:
         self._github = github.Github(git_pat)
 
         vertexai.init(project=gcp_project, location=gcp_location)
-        self._llm = TextGenerationModel.from_pretrained(VERTEX_FOUNDATIONAL_MODEL)
+        self._llm = TextGenerationModel.from_pretrained(llm)
 
     def clone_repository(
             self,

@@ -38,6 +38,7 @@ resource "google_cloudfunctions2_function" "default" {
     environment_variables = {
       PROJECT_ID = google_project.main.project_id
       LOCATION   = var.region
+      VERTEX_FOUNDATIONAL_MODEL = var.llm
     }
   }
 
@@ -50,6 +51,7 @@ resource "google_cloudfunctions2_function" "default" {
     environment_variables = {
       PROJECT_ID = google_project.main.project_id
       LOCATION   = var.region
+      VERTEX_FOUNDATIONAL_MODEL = var.llm
     }
 
     secret_environment_variables {
@@ -72,8 +74,14 @@ resource "google_cloudfunctions2_function" "default" {
       secret     = google_secret_manager_secret.public_key_secret.secret_id
       version    = "latest"
     }
-  }
 
+    secret_environment_variables {
+      key        = "PASS_KEY"
+      project_id = google_project.main.project_id
+      secret     = google_secret_manager_secret.git_key_passphrase.secret_id
+      version    = "latest"
+    }
+  }
 }
 
 resource "google_cloud_run_service_iam_member" "member" {

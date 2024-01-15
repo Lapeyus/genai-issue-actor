@@ -16,28 +16,22 @@ location = os.getenv('LOCATION')
 github_pat = os.getenv('GITHUB_PAT')
 github_private_key = base64.b64decode(os.getenv("PRIVATE_KEY")).decode('utf-8')
 github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode('utf-8')
+git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
+git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
+llm = os.getenv('VERTEX_FOUNDATIONAL_MODEL')
 
 REPO_DIR = 'local_repo'
 
 @functions_framework.http
 def handle_issue(request):
-    """HTTP Cloud Function.
-    Args:
-        request (flask.Request): The request object.
-        <https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data>
-    Returns:
-        The response text, or any set of values that can be turned into a
-        Response object using `make_response`
-        <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
-    """
     request_json = request.get_json(silent=True)
-
     return_headers = {"Content-Type": "application/json"}
 
     if 'action' not in request_json:
         return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
-    
+
     if request_json['action'] != "opened":
+        logger.info(f"ignoring non-new issue notification, action: {request_json['action']}")
         return (json.dumps({"msg": "Ignoring non-new issue notification"}), 200, return_headers)
 
     git_repo = request_json['repository']['ssh_url']
@@ -52,19 +46,20 @@ def handle_issue(request):
         location,
         github_private_key,
         github_public_key,
-        github_pat
-        )
+        github_pat,
+        git_key_passphrase,
+        llm=llm
+    )
 
     try:
         autocoder_app.clone_repository(git_repo)
-
         contributing = None
         try:
             contributing = autocoder_app._fetch_repo_file_contents("CONTRIBUTING.md")
         except:
             logger.info("No existing CONTRIBUTING.md to use.")
             pass
-        
+
         autocoder_app.create_branch(contributing=contributing, desired_change=issue_body)
         existing_code, updated_code = autocoder_app.apply_code_changes("main.py", issue_body)
         autocoder_app.update_unit_tests("tests/test_main.py", updated_code)
