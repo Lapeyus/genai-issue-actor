@@ -27,6 +27,10 @@ def handle_issue(request):
     request_json = request.get_json(silent=True)
     return_headers = {"Content-Type": "application/json"}
 
+    if request_json['issue']['assignee'] is not None:
+        logger.info(f"Issue already assigned to: { request_json['issue']['assignee']}")
+        return (json.dumps({"err": 'Issue already assigned'}), 200, return_headers)
+    
     if 'action' not in request_json:
         return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
 
