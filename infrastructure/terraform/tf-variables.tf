@@ -7,7 +7,7 @@ variable "folder_display_name" {
 variable "parent" {
   description = "google_folder_parent"
   type        = string
-  default     = ""
+  default     = "folders/#"
 }
 
 variable "project_name" {
@@ -25,13 +25,13 @@ variable "project_id" {
 variable "billing_account" {
   description = "The ID of the organization."
   type        = string
-  default     = ""
+  default     = "yourproject #-#-#"
 }
 
 variable "region" {
   description = "The region to use for the created resources."
   type        = string
-  default     = ""
+  default     = "us-central1"
 }
 
 variable "github_owner" {
@@ -43,11 +43,11 @@ variable "github_owner" {
 variable "github_repo" {
   description = "The region to use for the created resources."
   type        = string
-  default     = ""
+  default     = "genai-issue-actor"
 }
 
 variable "llm" {
   description = "llm"
   type        = string
-  default     = ""
+  default     = "gemini-pro"
 }
