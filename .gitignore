@@ -16,3 +16,4 @@ cdktf.log
 
 venv/
 .vscode
+*.tfvars
