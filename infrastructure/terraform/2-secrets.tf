@@ -46,6 +46,18 @@ resource "google_secret_manager_secret" "git_key_passphrase" {
   }
 }
 
+resource "google_secret_manager_secret" "gemini_api_key" {
+  project   = google_project.main.project_id
+  secret_id = "gemini-api-key"
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
 resource "google_secret_manager_secret_version" "github_pat_version" {
   secret      = google_secret_manager_secret.github_pat_secret.id
   secret_data = random_id.default.hex
@@ -65,5 +77,11 @@ resource "google_secret_manager_secret_version" "private_key_secret" {
 
 resource "google_secret_manager_secret_version" "git_key_passphrase_version" {
   secret      = google_secret_manager_secret.git_key_passphrase.id
+  secret_data = " "
+}
+
+
+resource "google_secret_manager_secret_version" "gemini_api_key" {
+  secret      = google_secret_manager_secret.gemini_api_key.id
   secret_data = " "
 }

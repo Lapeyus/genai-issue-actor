@@ -1,5 +1,5 @@
 # genai-issue-actor
-Author: Evan Seabrook
+Original Author: Evan Seabrook
 
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
@@ -21,19 +21,16 @@ The project is split into several key directories/modules:
  - tests
    - Houses the unit tests for `main.py`
  - main.py
-   - Houses a simple "hello world" application for demonstration purposes.
+
 
 ## Deployment
 If you are interested in experimenting with this project further, please fork it. To set up the Cloud Function on GCP, you will need to:
 1. Generate a personal access token for your GitHub account (it will need write permissions for Issues in your fork)
 2. Generate an RSA deploy key for your repository (it will need write access to your fork)
-3. Set up a GCP project and upload the code in `cloud_function` as the source. You will need to populate the following environment variables based on the setup in steps 1-3:  
+3. Generate a API KEY for the Gemini Api
 
-    **project_id**: The GCP project ID  
-    **location**: The Vertex AI location to run inference against  
-    **github_pat**: Your personal access token
-    **PRIVATE_KEY**: Base 64 encoded private key (from your deploy key)
-    **PUBLIC_KEY**: Base 64 encoded public key (from your deploy key)  
+4. cd into the infrastructure folder and run terraform apply
 
-    I would recommend bumping up the Cloud Function specs to 1GB RAM / 1vCPU.
+5. once the terraform creation process is done add your secret versions into secret manager
 
+6. set your github webhook url to the function and choose to be notified on new issues

@@ -2,9 +2,8 @@ import pygit2
 import logging
 import shutil
 import github
-import vertexai
 
-from vertexai.language_models import TextGenerationModel
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,13 +13,12 @@ REPO_DIR = 'local_repo'
 class Autocoder:
     def __init__(
         self,
-        gcp_project: str,
-        gcp_location: str,
         git_private_key: str,
         git_public_key: str,
         git_pat: str,
         git_key_passphrase: str = "",
         llm: str = "",
+        gemini_api_key: str = "",
     ):
         self.git_private_key = git_private_key
         self.git_public_key = git_public_key
@@ -28,8 +26,8 @@ class Autocoder:
         self._local_repo = None
         self._github = github.Github(git_pat)
 
-        vertexai.init(project=gcp_project, location=gcp_location)
-        self._llm = TextGenerationModel.from_pretrained(llm)
+        genai.configure(api_key=gemini_api_key)
+        self._llm = genai.GenerativeModel(model_name=llm)
 
     def clone_repository(
             self,
@@ -113,8 +111,8 @@ class Autocoder:
             if contributing:
                 prompt += f"\n\nFollow any branch naming convention within this guide, if any are stipulated:\n{contributing}"
             
-            resp = self._llm.predict(prompt)
-            branch_name = resp.text.strip()
+            resp = self._llm.generate_content(prompt)
+            branch_name = resp.text.strip().strip('```').strip("python")
 
         self._branch = self._local_repo.branches.local.create(branch_name, commit)
         self._branch.upstream = self._branch
@@ -136,10 +134,10 @@ class Autocoder:
         :rtype: (str, str)
         """
         existing_code = self._fetch_repo_file_contents(path_to_code)
-        response = self._llm.predict(
-                f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- do NOT surround the code in markdown backticks:\n{desired_change}"
+        response = self._llm.generate_content(
+                f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only:\n{desired_change}"
             )
-        replacement_code = response.text.strip()
+        replacement_code = response.text.strip().strip('```').strip("python")
         Autocoder._write_repo_file_contents(path_to_code, replacement_code)
         return existing_code, replacement_code
     
@@ -158,11 +156,11 @@ class Autocoder:
         :rtype: str
         """
         existing_tests = self._fetch_repo_file_contents(path_to_tests)
-        replacement_unit_tests_prompt = f"Given the existing code:\n{updated_code}\n\nPlease change the unit tests below to work with the above code. Provide just the new version of the unit tests -- do NOT surround the unit tests in markdown backticks: \n\n{existing_tests}"
+        replacement_unit_tests_prompt = f"Given the existing code:\n{updated_code}\n\nPlease change the unit tests below to work with the above code. Provide just the new version of the unit tests -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only: \n\n{existing_tests}"
 
-        response = self._llm.predict(replacement_unit_tests_prompt)
+        response = self._llm.generate_content(replacement_unit_tests_prompt)
         logger.info(f"New unit tests: {response}")
-        replacement_unit_tests = response.text.strip()
+        replacement_unit_tests = response.text.strip().strip('```').strip("python")
         self._write_repo_file_contents(path_to_tests, replacement_unit_tests)
         return replacement_unit_tests
     
@@ -172,7 +170,7 @@ class Autocoder:
             replacement_code: str,
             commit_message: str = None,
             contributing: str = None,
-            author_email: str = 'bot@lapeyus.cr',
+            author_email: str = 'bot@evanseabrook.ca',
             author_name: str = 'EvanBot'
     ) -> str:
         """Adds all modified files and creates a commit in the branch. `apply_code_changes` and `update_unit_tests` should be called before calling this.
@@ -183,7 +181,7 @@ class Autocoder:
         :type replacement_code: str
         :param commit_message: The commit message to use -- one will be generated based on the changes found between `existing_code` and `replacement_code` if None provided, defaults to None
         :type commit_message: str, optional
-        :param author_email: The email to use as the git commit author, defaults to 'bot@lapeyus.cr'
+        :param author_email: The email to use as the git commit author, defaults to 'bot@evanseabrook.ca'
         :type author_email: str, optional
         :param author_name: The name to use as the git commit author, defaults to 'EvanBot'
         :type author_name: str, optional
@@ -195,10 +193,10 @@ class Autocoder:
 
             if contributing:
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
-            response = self._llm.predict(
+            response = self._llm.generate_content(
                 commit_msg_prompt
             )
-            commit_message = response.text.strip()
+            commit_message = response.text.strip().strip('```').strip("python")
         
         index = self._local_repo.index
         parents = [self._local_repo.head.target]
@@ -261,4 +259,5 @@ class Autocoder:
         """Deletes the locally cloned repository files.
         """
         shutil.rmtree(REPO_DIR, True)
+        
         

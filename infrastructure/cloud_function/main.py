@@ -19,6 +19,7 @@ github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode('utf-8')
 git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
 git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
 llm = os.getenv('VERTEX_FOUNDATIONAL_MODEL')
+gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 REPO_DIR = 'local_repo'
 
@@ -30,7 +31,7 @@ def handle_issue(request):
     if request_json['issue']['assignee'] is not None:
         logger.info(f"Issue already assigned to: { request_json['issue']['assignee']}")
         return (json.dumps({"err": 'Issue already assigned'}), 200, return_headers)
-    
+
     if 'action' not in request_json:
         return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
 
@@ -46,13 +47,12 @@ def handle_issue(request):
     logger.info(f"Issue body: {issue_body}")
 
     autocoder_app = Autocoder(
-        project_id,
-        location,
         github_private_key,
         github_public_key,
         github_pat,
         git_key_passphrase,
-        llm=llm
+        llm=llm,
+        gemini_api_key=gemini_api_key
     )
 
     try:

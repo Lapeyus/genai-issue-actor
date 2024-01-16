@@ -81,6 +81,14 @@ resource "google_cloudfunctions2_function" "default" {
       secret     = google_secret_manager_secret.git_key_passphrase.secret_id
       version    = "latest"
     }
+
+    secret_environment_variables {
+      key        = "GEMINI_API_KEY"
+      project_id = google_project.main.project_id
+      secret     = google_secret_manager_secret.gemini_api_key.secret_id
+      version    = "latest"
+    }
+
   }
 }
 

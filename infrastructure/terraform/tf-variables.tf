@@ -49,5 +49,5 @@ variable "github_repo" {
 variable "llm" {
   description = "llm"
   type        = string
-  default     = "text-bison@002"
+  default     = "gemini-pro"
 }
