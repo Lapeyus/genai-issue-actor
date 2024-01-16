@@ -1,3 +1,4 @@
+```python
 import os
 from dotenv import load_dotenv
 import vertexai
@@ -14,7 +15,7 @@ load_dotenv()
 REGION = os.getenv('REGION')
 PROJECT_ID = os.getenv('PROJECT_ID')
 
-st.set_page_config(page_title="Wynnsights", page_icon=":hotel:", layout="wide", initial_sidebar_state="auto")
+st.set_page_config(page_title="Wynnsights", page_icon=":eggplant:", layout="wide", initial_sidebar_state="auto")
 
 if 'dataframe' not in st.session_state:
     st.session_state['dataframe'] = {}
@@ -130,3 +131,6 @@ if col1.button("Generate Query"):
     except Exception as e:
         st.error(f"Error executing query: {e}")
 
+
+
+```
