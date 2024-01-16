@@ -52,7 +52,3 @@ wrapt==1.16.0
 
 google-generativeai==0.3.1
 langchain-google-genai==0.0.4
-
-langchain==0.0.333
-langchain-experimental==0.0.41
-langchainplus-sdk==0.0.20
