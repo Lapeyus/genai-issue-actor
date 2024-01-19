@@ -24,12 +24,10 @@ OPTIONS (
         ]
         self.expected = """
 Table Name: `bigquery-public-data.github_repos.commits`
-   - commit SHA256
-   - NOT NULL
-   - author DATE
-   - NOT NULL
-   - committer DATE
-   - NOT NULL
+
+   - commit SHA256 NOT NULL
+   - author DATE NOT NULL
+   - committer DATE NOT NULL
    - message STRING
 """
 
@@ -47,10 +45,14 @@ class TestFormattingTable(unittest.TestCase):
     
     def format_table(df):
         formatted_strings = []
-        for row in df.iterrows():
+        for row_name, row in df.iterrows():
             for col_name in df.columns:
-                formatted_strings.append(f"{col_name}:{row[col_name]}")
+                formatted_strings.append(f"{row_name}:{col_name}")
         return ', '.join(formatted_strings)
+
+    def test_format_table(self):
+        actual = format_table(self.df)
+        self.assertEqual(self.expected, actual)
 
 if __name__ == "__main__":
     unittest.main()
