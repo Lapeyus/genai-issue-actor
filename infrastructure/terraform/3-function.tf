@@ -38,7 +38,7 @@ resource "google_cloudfunctions2_function" "default" {
     environment_variables = {
       PROJECT_ID = google_project.main.project_id
       LOCATION   = var.region
-      VERTEX_FOUNDATIONAL_MODEL = var.llm
+      GENAI_MODEL = var.llm
     }
   }
 
@@ -51,7 +51,7 @@ resource "google_cloudfunctions2_function" "default" {
     environment_variables = {
       PROJECT_ID = google_project.main.project_id
       LOCATION   = var.region
-      VERTEX_FOUNDATIONAL_MODEL = var.llm
+      GENAI_MODEL = var.llm
     }
 
     secret_environment_variables {

@@ -18,22 +18,20 @@ github_private_key = base64.b64decode(os.getenv("PRIVATE_KEY")).decode('utf-8')
 github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode('utf-8')
 git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
 git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode('utf-8')
-llm = os.getenv('VERTEX_FOUNDATIONAL_MODEL')
+llm = os.getenv('GENAI_MODEL')
 gemini_api_key = os.getenv("GEMINI_API_KEY")
-
-REPO_DIR = 'local_repo'
 
 @functions_framework.http
 def handle_issue(request):
     request_json = request.get_json(silent=True)
     return_headers = {"Content-Type": "application/json"}
 
+    if 'action' not in request_json:
+        return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
+    
     if request_json['issue']['assignee'] is not None:
         logger.info(f"Issue already assigned to: { request_json['issue']['assignee']}")
         return (json.dumps({"err": 'Issue already assigned'}), 200, return_headers)
-
-    if 'action' not in request_json:
-        return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
 
     if request_json['action'] != "opened":
         logger.info(f"ignoring non-new issue notification, action: {request_json['action']}")
@@ -43,6 +41,7 @@ def handle_issue(request):
     git_repo_id = int(request_json['repository']['id'])
     issue_number = int(request_json['issue']['number'])
     issue_body = request_json['issue']['body']
+    
     logger.info(f"Git repo: {git_repo}")
     logger.info(f"Issue body: {issue_body}")
 

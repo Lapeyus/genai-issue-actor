@@ -170,8 +170,8 @@ class Autocoder:
             replacement_code: str,
             commit_message: str = None,
             contributing: str = None,
-            author_email: str = 'bot@evanseabrook.ca',
-            author_name: str = 'EvanBot'
+            author_email: str = 'lapeyus@gmail.com',
+            author_name: str = 'lapeyus'
     ) -> str:
         """Adds all modified files and creates a commit in the branch. `apply_code_changes` and `update_unit_tests` should be called before calling this.
 
@@ -181,9 +181,9 @@ class Autocoder:
         :type replacement_code: str
         :param commit_message: The commit message to use -- one will be generated based on the changes found between `existing_code` and `replacement_code` if None provided, defaults to None
         :type commit_message: str, optional
-        :param author_email: The email to use as the git commit author, defaults to 'bot@evanseabrook.ca'
+        :param author_email: The email to use as the git commit author, defaults to 'lapeyus@gmail.com'
         :type author_email: str, optional
-        :param author_name: The name to use as the git commit author, defaults to 'EvanBot'
+        :param author_name: The name to use as the git commit author, defaults to 'lapeyus'
         :type author_name: str, optional
         :return: The commit message provided or generated.
         :rtype: str
@@ -197,7 +197,9 @@ class Autocoder:
                 commit_msg_prompt
             )
             commit_message = response.text.strip().strip('```').strip("python")
-        
+
+        commit_message += f"\n\nSigned-off-by: {author_name} <{author_email}>"
+
         index = self._local_repo.index
         parents = [self._local_repo.head.target]
         index.add_all()
@@ -205,6 +207,7 @@ class Autocoder:
         ref = self._local_repo.head.name
         author = pygit2.Signature(author_name, author_email)
         committer = author
+        print(author, committer)
         tree = index.write_tree()
         self._local_repo.create_commit(ref, author, committer, commit_message, tree, parents)
         return commit_message
