@@ -17,11 +17,6 @@ assignees: ''
         "change": "Description of the changes for main.py",
         "unit_test_path": "tests/main.py"
       },
-      // {
-      //   "file": "file2.py",
-      //   "change": "Description of the change for file2.py",
-      //   "unit_test_path": "tests/test_file2.py"
-      // }
     ]
   }
 }
