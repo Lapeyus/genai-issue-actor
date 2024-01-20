@@ -1,6 +1,7 @@
 import unittest
-from main import parse_bigquery_schema
 import pandas as pd
+
+from main import parse_bigquery_schema, format_table
 
 class MockDocument:
     def __init__(self, page_content):
@@ -44,13 +45,10 @@ class TestFormattingTable(unittest.TestCase):
             "age": [20, 25, 30],
         })
         self.expected = "name:Alice,age:20,name:Bob,age:25,name:Carol,age:30"
-    
-    def format_table(df):
-        formatted_strings = []
-        for row in df.iterrows():
-            for col_name in df.columns:
-                formatted_strings.append(f"{col_name}:{row[col_name]}")
-        return ', '.join(formatted_strings)
+
+    def test_format_table(self):
+        actual = format_table(self.df)
+        self.assertEqual(self.expected, actual)
 
 if __name__ == "__main__":
     unittest.main()

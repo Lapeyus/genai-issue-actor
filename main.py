@@ -1,3 +1,4 @@
+
 import os
 from dotenv import load_dotenv
 import vertexai
@@ -105,28 +106,27 @@ with st.container():
         st.session_state['dataframe'] = parsed_schema
         schema_placeholder.write(parsed_schema)
 
-if col1.button("Generate Query"):
-    bqschema = parse_bigquery_schema(data)
-    googlesql = (
-        chain.invoke(
-            {
-                "question": user_query,
-                "schema": bqschema
-            }
+    if col1.button("Generate Query"):
+        bqschema = parse_bigquery_schema(data)
+        googlesql = (
+            chain.invoke(
+                {
+                    "question": user_query,
+                    "schema": bqschema
+                }
+            )
+        ).strip('```').strip("googlesql")
+        col1.code(googlesql, language="sql", line_numbers=True)
+        custom_retry = Retry(
+            initial=1.0,
+            maximum=10.0,
+            multiplier=2,
+            deadline=300.0,
         )
-    ).strip('```').strip("googlesql")
-    col1.code(googlesql, language="sql", line_numbers=True)
-    custom_retry = Retry(
-        initial=1.0,
-        maximum=10.0,
-        multiplier=2,
-        deadline=300.0,
-    )
-    try:
-        bqdata = client.query(googlesql).result(timeout=300, retry=custom_retry).to_dataframe()
-        data_placeholder.write(bqdata)
-        describe = "you are a data scientist, describe this and interpret the query intent in relation to the bigquery schema answering the question: what is this information good for?, very briefly evaluate the IA generated sql in terms of optimization, stricly limit your response to information in this context:\n"
-        col1.write(llm(describe + "bigquery schema: "+bqschema+" user query: "+user_query + "generated sql:" +googlesql + "data response: "+format_table(bqdata)))
-    except Exception as e:
-        st.error(f"Error executing query: {e}")
-
+        try:
+            bqdata = client.query(googlesql).result(timeout=300, retry=custom_retry).to_dataframe()
+            data_placeholder.write(bqdata)
+            describe = "you are a data scientist, describe this and interpret the query intent in relation to the bigquery schema answering the question: what is this information good for?, very briefly evaluate the IA generated sql in terms of optimization, stricly limit your response to information in this context:\n"
+            col1.write(llm(describe + "bigquery schema: "+bqschema+" user query: "+user_query + "generated sql:" +googlesql + "data response: "+format_table(bqdata)))
+        except Exception as e:
+            st.error(f"Error executing query: {e}")
