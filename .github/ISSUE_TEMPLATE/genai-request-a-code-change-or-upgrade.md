@@ -2,7 +2,7 @@
 name: Genai Request a code change or upgrade
 about: Genai Request a code change or upgrade
 title: "[GENAI]-"
-labels: enhancement,genai
+labels: enhancement
 assignees: ''
 
 ---
