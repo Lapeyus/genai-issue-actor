@@ -1,29 +1,31 @@
 ---
-name: Code Modification Request
-about: Request a code change or upgrade
-title: "[MODIFY]: "
-labels: ["genai", "bot"]
-assignees:
-  - octocat
-body:
-  - type: markdown
-    attributes:
-      value: |
-        hi!
-  - type: input
-    id: files_to_scan
-    attributes:
-      label: Files to Scan
-      description: List the files that need to be scanned, separated by commas.
-      placeholder: "file1.py, file2.py"
-    validations:
-      required: true
-  - type: textarea
-    id: proposed_changes
-    attributes:
-      label: Proposed Changes
-      description: Describe the changes or upgrades proposed for each file, and specify the location of any associated unit tests.
-      placeholder: "file1.py: Description of change, Unit test: tests/test_file1.py"
-      render: json
-    validations:
-      required: true
+name: Genai Request a code change or upgrade
+about: Genai Request a code change or upgrade
+title: "[GENAI]"
+labels: enhancement
+assignees: ''
+
+---
+
+```json
+{
+  "change_request": {
+    "files_to_scan": [
+      "file1.py",
+      "file2.py"
+    ],
+    "proposed_changes": [
+      {
+        "file": "file1.py",
+        "change": "Description of the change for file1.py",
+        "unit_test_path": "tests/test_file1.py"
+      },
+      {
+        "file": "file2.py",
+        "change": "Description of the change for file2.py",
+        "unit_test_path": "tests/test_file2.py"
+      }
+    ]
+  }
+}
+```
