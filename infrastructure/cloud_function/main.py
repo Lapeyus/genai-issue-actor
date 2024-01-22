@@ -5,6 +5,7 @@ import os
 import base64
 
 from autocoder import Autocoder
+from utility import parse_issue_body, extract_values_from_json
 
 logging.basicConfig()
 
@@ -41,7 +42,8 @@ def handle_issue(request):
     git_repo_id = int(request_json['repository']['id'])
     issue_number = int(request_json['issue']['number'])
     issue_body = request_json['issue']['body']
-    
+
+    parsed_body = parse_issue_body(issue_body)    
     logger.info(f"Git repo: {git_repo}")
     logger.info(f"Issue body: {issue_body}")
 
