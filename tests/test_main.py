@@ -45,12 +45,33 @@ class TestFormattingTable(unittest.TestCase):
         })
         self.expected = "name:Alice,age:20,name:Bob,age:25,name:Carol,age:30"
     
-    def format_table(df):
-        formatted_strings = []
-        for row in df.iterrows():
-            for col_name in df.columns:
-                formatted_strings.append(f"{col_name}:{row[col_name]}")
-        return ', '.join(formatted_strings)
+    def test_format_table(self):
+        actual = format_table(self.df)
+        self.assertEqual(self.expected, actual)
+
+def format_table(df):
+    formatted_strings = []
+    for row in df.iterrows():
+        for col_name in df.columns:
+            formatted_strings.append(f"{col_name}:{row[col_name]}")
+    return ', '.join(formatted_strings)
 
 if __name__ == "__main__":
     unittest.main()
+
+# Adjust the code to change the webpage icon to a car
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+# Create a new instance of the Chrome driver
+options = Options()
+options.add_argument("--window-size=1920,1080")
+
+# Specify the path to the car icon
+options.add_argument("--app-icon=path/to/car_icon.ico")
+
+# Create a new Chrome driver with the specified options
+driver = webdriver.Chrome(options=options)
+
+# Load the webpage
+driver.get("https://www.example.com")
