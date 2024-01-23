@@ -14,7 +14,7 @@ load_dotenv()
 REGION = os.getenv('REGION')
 PROJECT_ID = os.getenv('PROJECT_ID')
 
-st.set_page_config(page_title="Wynnsights", page_icon=":hotel:", layout="wide", initial_sidebar_state="auto")
+st.set_page_config(page_title="Wynnsights", page_icon=":puke:", layout="wide", initial_sidebar_state="auto")
 
 if 'dataframe' not in st.session_state:
     st.session_state['dataframe'] = {}
@@ -129,4 +129,3 @@ if col1.button("Generate Query"):
         col1.write(llm(describe + "bigquery schema: "+bqschema+" user query: "+user_query + "generated sql:" +googlesql + "data response: "+format_table(bqdata)))
     except Exception as e:
         st.error(f"Error executing query: {e}")
-
