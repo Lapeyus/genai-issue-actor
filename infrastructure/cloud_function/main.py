@@ -5,7 +5,7 @@ import os
 import base64
 
 from autocoder import Autocoder
-from utility import parse_issue_body, extract_values_from_json
+from utility import parse_issue_body
 
 logging.basicConfig()
 
@@ -30,7 +30,7 @@ def handle_issue(request):
         return (json.dumps({"err": 'Request body does not include an "action"'}), 400, return_headers)
     
     if request_json['issue']['assignee'] is not None:
-        logger.info(f"Issue already assigned to: { request_json['issue']['assignee']}")
+        logger.info(f"Issue already assigned to: {request_json['issue']['assignee']}")
         return (json.dumps({"err": 'Issue already assigned'}), 200, return_headers)
 
     if request_json['action'] != "opened":
@@ -64,15 +64,22 @@ def handle_issue(request):
             logger.info("No existing CONTRIBUTING.md to use.")
             pass
 
-        autocoder_app.create_branch(contributing=contributing, desired_change=parsed_body["change_request"]["description"])
-        existing_code, updated_code = autocoder_app.apply_code_changes(parsed_body["change_request"]["affected_files"][0], parsed_body["change_request"]["description"])
-        autocoder_app.update_unit_tests("tests/test_main.py", updated_code)
-        commit_message = autocoder_app.create_commit(existing_code=existing_code, replacement_code=updated_code, contributing=contributing)
+        desired_change = parsed_body["change_request"]["description"]
+        autocoder_app.create_branch(contributing=contributing, desired_change=desired_change)
+        
+        # Iterate through each affected file and create a commit
+        for file in parsed_body["change_request"]["affected_files"]:
+            existing_code, updated_code = autocoder_app.apply_code_changes(file, desired_change)
+            autocoder_app.create_commit(
+                existing_code=existing_code, replacement_code=updated_code, contributing=contributing
+                # , commit_message=desired_change
+            )
+        
         autocoder_app.push_remote()
         autocoder_app.create_pr(
             repo_id=git_repo_id,
             issue_number=issue_number,
-            commit_message=commit_message
+            commit_message=desired_change
         )
     except BaseException as e:
         return (json.dumps({"err": str(e) }), 500, return_headers)

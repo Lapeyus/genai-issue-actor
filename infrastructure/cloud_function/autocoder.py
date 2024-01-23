@@ -135,7 +135,7 @@ class Autocoder:
         """
         existing_code = self._fetch_repo_file_contents(path_to_code)
         response = self._llm.generate_content(
-                f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only:\n{desired_change}"
+                f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only. if the desired changed does not affect the code, please provide the same existing code as your response:\n{desired_change}"
             )
         replacement_code = response.text.strip().strip('```').strip("python")
         Autocoder._write_repo_file_contents(path_to_code, replacement_code)
@@ -196,7 +196,7 @@ class Autocoder:
             response = self._llm.generate_content(
                 commit_msg_prompt
             )
-            commit_message = response.text.strip().strip('```').strip("python")
+            commit_message = response.text
 
         commit_message += f"\n\nSigned-off-by: {author_name} <{author_email}>"
 
