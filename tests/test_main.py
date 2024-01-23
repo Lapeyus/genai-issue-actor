@@ -45,12 +45,13 @@ class TestFormattingTable(unittest.TestCase):
         })
         self.expected = "name:Alice,age:20,name:Bob,age:25,name:Carol,age:30"
     
-    def format_table(df):
+    def test_format_table(self):
         formatted_strings = []
-        for row in df.iterrows():
-            for col_name in df.columns:
+        for row in self.df.iterrows():
+            for col_name in self.df.columns:
                 formatted_strings.append(f"{col_name}:{row[col_name]}")
-        return ', '.join(formatted_strings)
+        formatted_table = ', '.join(formatted_strings)
+        self.assertEqual(self.expected, formatted_table)
 
 if __name__ == "__main__":
     unittest.main()
