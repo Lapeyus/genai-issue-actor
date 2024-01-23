@@ -12,7 +12,6 @@ def parse_to_json(string_input):
         json_data = {"error": f"JSON decoding error: {e}"}
 
 
-
 def parse_issue_body(issue_body):
     # Extract JSON part from the issue body
     # Assuming the JSON part is enclosed in triple backticks (```)
