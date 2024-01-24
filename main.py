@@ -1,14 +1,14 @@
 import os
-from dotenv import load_dotenv
-import vertexai
-from langchain.llms import VertexAI
-from google.cloud import bigquery
-from langchain.llms import VertexAI
-from langchain.document_loaders import BigQueryLoader
-from langchain.prompts import PromptTemplate
-import streamlit as st
 import re
+
+import streamlit as st
+import vertexai
+from dotenv import load_dotenv
 from google.api_core.retry import Retry
+from google.cloud import bigquery
+from langchain.document_loaders import BigQueryLoader
+from langchain.llms import VertexAI
+from langchain.prompts import PromptTemplate
 
 load_dotenv()
 REGION = os.getenv("REGION")

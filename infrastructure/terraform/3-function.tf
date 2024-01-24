@@ -36,8 +36,8 @@ resource "google_cloudfunctions2_function" "default" {
     }
 
     environment_variables = {
-      PROJECT_ID = google_project.main.project_id
-      LOCATION   = var.region
+      PROJECT_ID  = google_project.main.project_id
+      LOCATION    = var.region
       GENAI_MODEL = var.llm
     }
   }
@@ -49,8 +49,8 @@ resource "google_cloudfunctions2_function" "default" {
     available_cpu      = "1"
 
     environment_variables = {
-      PROJECT_ID = google_project.main.project_id
-      LOCATION   = var.region
+      PROJECT_ID  = google_project.main.project_id
+      LOCATION    = var.region
       GENAI_MODEL = var.llm
     }
 

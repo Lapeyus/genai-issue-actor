@@ -64,15 +64,15 @@ resource "google_secret_manager_secret_version" "github_pat_version" {
 }
 
 resource "google_secret_manager_secret_version" "public_key_version" {
-  secret      = google_secret_manager_secret.public_key_secret.id
+  secret                = google_secret_manager_secret.public_key_secret.id
   is_secret_data_base64 = false
-  secret_data = filebase64("~/.ssh/id_rsa.pub")
+  secret_data           = filebase64("~/.ssh/id_rsa.pub")
 }
 
 resource "google_secret_manager_secret_version" "private_key_secret" {
-  secret      = google_secret_manager_secret.private_key_secret.id
+  secret                = google_secret_manager_secret.private_key_secret.id
   is_secret_data_base64 = false
-  secret_data = filebase64("~/.ssh/id_rsa")
+  secret_data           = filebase64("~/.ssh/id_rsa")
 }
 
 resource "google_secret_manager_secret_version" "git_key_passphrase_version" {

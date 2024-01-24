@@ -1,9 +1,9 @@
-import pygit2
 import logging
 import shutil
-import github
 
+import github
 import google.generativeai as genai
+import pygit2
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

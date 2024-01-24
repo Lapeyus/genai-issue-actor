@@ -1,6 +1,8 @@
 import unittest
-from main import parse_bigquery_schema
+
 import pandas as pd
+
+from main import parse_bigquery_schema
 
 
 class MockDocument:

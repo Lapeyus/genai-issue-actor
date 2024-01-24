@@ -10,8 +10,13 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.1.0"
     }
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.2.0"
+    }
   }
 }
+
 
 provider "google" {
   project = "genai-issue-actor"

@@ -1,9 +1,9 @@
-import functions_framework
-import logging
-import json
-import os
 import base64
+import json
+import logging
+import os
 
+import functions_framework
 from autocoder import Autocoder
 from utility import parse_issue_body
 
