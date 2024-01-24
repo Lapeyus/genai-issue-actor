@@ -11,19 +11,23 @@ import re
 from google.api_core.retry import Retry
 
 load_dotenv()
-REGION = os.getenv('REGION')
-PROJECT_ID = os.getenv('PROJECT_ID')
+REGION = os.getenv("REGION")
+PROJECT_ID = os.getenv("PROJECT_ID")
 
-st.set_page_config(page_title="Wynnsights", page_icon="👊", layout="wide", initial_sidebar_state="auto")
+st.set_page_config(
+    page_title="Wynnsights", page_icon="👊", layout="wide", initial_sidebar_state="auto"
+)
 
-if 'dataframe' not in st.session_state:
-    st.session_state['dataframe'] = {}
+if "dataframe" not in st.session_state:
+    st.session_state["dataframe"] = {}
 
 client = bigquery.Client()
 
 st.title("Wynnsights BQ")
 st.sidebar.title("Configuration")
-datset = st.sidebar.selectbox('Dataset', (f'{PROJECT_ID}.thelook','bigquery-public-data.github_repos'))
+datset = st.sidebar.selectbox(
+    "Dataset", (f"{PROJECT_ID}.thelook", "bigquery-public-data.github_repos")
+)
 schema_query = f"""
 SELECT table_name, ddl
 FROM `{datset}.INFORMATION_SCHEMA.TABLES`
@@ -37,11 +41,15 @@ Question: \n\n{question}
 context: \n\n{schema}
 """
 
-model_name = st.sidebar.selectbox("LLM Model Name", ("code-bison","text-bison@002"))
-max_output_tokens = st.sidebar.number_input("Max Output Tokens", min_value=1, value=2048)
+model_name = st.sidebar.selectbox("LLM Model Name", ("code-bison", "text-bison@002"))
+max_output_tokens = st.sidebar.number_input(
+    "Max Output Tokens", min_value=1, value=2048
+)
 temperature = st.sidebar.slider("Temperature (randomness)", 0.0, 1.0, 0.0)
-top_p = st.sidebar.slider("Top P (determinism)", min_value=0, max_value=1,value=1)
-top_k = st.sidebar.number_input("Top K (vocabulary probability)", min_value=0, max_value=1,value=1)
+top_p = st.sidebar.slider("Top P (determinism)", min_value=0, max_value=1, value=1)
+top_k = st.sidebar.number_input(
+    "Top K (vocabulary probability)", min_value=0, max_value=1, value=1
+)
 verbose = st.sidebar.checkbox("Verbose", value=True)
 llm = VertexAI(
     model_name=model_name,
@@ -55,11 +63,9 @@ prompt = PromptTemplate.from_template(template)
 chain = prompt | llm
 
 
-loader = BigQueryLoader(
-    query=schema_query,
-    page_content_columns="ddl"
-)
+loader = BigQueryLoader(query=schema_query, page_content_columns="ddl")
 data = loader.load()
+
 
 def parse_bigquery_schema(documents):
     result = []
@@ -72,23 +78,27 @@ def parse_bigquery_schema(documents):
         ddl_start = page_content.find("ddl: CREATE TABLE")
         ddl_end = page_content.find("\\n)\\nOPTIONS")
         ddl_content = page_content[ddl_start:ddl_end]
-        table_name = re.search(r'`([^`]+)`', ddl_content).group(1)
+        table_name = re.search(r"`([^`]+)`", ddl_content).group(1)
 
         table_info = f"Table Name: `{table_name}`\n"
         columns_str = ddl_content.split("(")[1]
-        columns = re.findall(r'(\w+ \w+),?', columns_str)
+        columns = re.findall(r"(\w+ \w+),?", columns_str)
 
-        column_info = "\n".join(["   - " + col.replace("\\n", "").strip() for col in columns])
+        column_info = "\n".join(
+            ["   - " + col.replace("\\n", "").strip() for col in columns]
+        )
         result.append(table_info + column_info)
 
     return "\n\n".join(result)
+
 
 def format_table(df):
     formatted_strings = []
     for row_name, row in df.iterrows():
         for col_name in df.columns:
             formatted_strings.append(f"{row_name}:{col_name}")
-    return ', '.join(formatted_strings)
+    return ", ".join(formatted_strings)
+
 
 vertexai.init(project=PROJECT_ID, location=REGION)
 
@@ -102,19 +112,16 @@ with st.container():
 
         data = loader.load()
         parsed_schema = parse_bigquery_schema(data)
-        st.session_state['dataframe'] = parsed_schema
+        st.session_state["dataframe"] = parsed_schema
         schema_placeholder.write(parsed_schema)
 
 if col1.button("Generate Query"):
     bqschema = parse_bigquery_schema(data)
     googlesql = (
-        chain.invoke(
-            {
-                "question": user_query,
-                "schema": bqschema
-            }
-        )
-    ).strip('```').strip("googlesql")
+        (chain.invoke({"question": user_query, "schema": bqschema}))
+        .strip("```")
+        .strip("googlesql")
+    )
     col1.code(googlesql, language="sql", line_numbers=True)
     custom_retry = Retry(
         initial=1.0,
@@ -123,9 +130,25 @@ if col1.button("Generate Query"):
         deadline=300.0,
     )
     try:
-        bqdata = client.query(googlesql).result(timeout=300, retry=custom_retry).to_dataframe()
+        bqdata = (
+            client.query(googlesql)
+            .result(timeout=300, retry=custom_retry)
+            .to_dataframe()
+        )
         data_placeholder.write(bqdata)
         describe = "you are a data scientist, describe this and interpret the query intent in relation to the bigquery schema answering the question: what is this information good for?, very briefly evaluate the IA generated sql in terms of optimization, stricly limit your response to information in this context:\n"
-        col1.write(llm(describe + "bigquery schema: "+bqschema+" user query: "+user_query + "generated sql:" +googlesql + "data response: "+format_table(bqdata)))
+        col1.write(
+            llm(
+                describe
+                + "bigquery schema: "
+                + bqschema
+                + " user query: "
+                + user_query
+                + "generated sql:"
+                + googlesql
+                + "data response: "
+                + format_table(bqdata)
+            )
+        )
     except Exception as e:
         st.error(f"Error executing query: {e}")

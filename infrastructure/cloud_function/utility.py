@@ -1,9 +1,14 @@
 import json
 import re
 
+
 def parse_to_json(string_input):
-    string_input = re.sub(r'^```json\r\n|\r\n```$', '', string_input, flags=re.MULTILINE)
-    string_input = string_input.replace('\\n', '').replace('\\r', '').replace('\\"', '"')
+    string_input = re.sub(
+        r"^```json\r\n|\r\n```$", "", string_input, flags=re.MULTILINE
+    )
+    string_input = (
+        string_input.replace("\\n", "").replace("\\r", "").replace('\\"', '"')
+    )
 
     try:
         json_data = json.loads(string_input)
@@ -27,15 +32,16 @@ def parse_issue_body(issue_body):
         print(f"Error parsing JSON: {e}")
         return None
 
+
 def extract_values_from_json(parsed_json):
     if parsed_json and "change_request" in parsed_json:
         change_request = parsed_json["change_request"]
-        
+
         branch_name = change_request.get("branch_name")
         description = change_request.get("description")
-        
+
         affected_files = change_request.get("affected_files", [])
-        
+
         # Assuming there might be multiple files in affected_files
         for file_info in affected_files:
             file_name = file_info.get("file")
@@ -44,11 +50,12 @@ def extract_values_from_json(parsed_json):
 
             # Process each file's information here
             # For example, you can print them or use them further in your code
-            print(f"File: {file_name}, Change: {file_change}, Unit Test Path: {unit_test_path}")
-        
+            print(
+                f"File: {file_name}, Change: {file_change}, Unit Test Path: {unit_test_path}"
+            )
+
         return branch_name, description, affected_files
 
     else:
         print("Invalid or empty JSON.")
         return None, None, None
-

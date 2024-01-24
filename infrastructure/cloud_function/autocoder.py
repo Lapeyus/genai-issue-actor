@@ -8,7 +8,8 @@ import google.generativeai as genai
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-REPO_DIR = 'local_repo'
+REPO_DIR = "local_repo"
+
 
 class Autocoder:
     def __init__(
@@ -29,28 +30,25 @@ class Autocoder:
         genai.configure(api_key=gemini_api_key)
         self._llm = genai.GenerativeModel(model_name=llm)
 
-    def clone_repository(
-            self,
-            repo_link: str
-    ):
+    def clone_repository(self, repo_link: str):
         """Clones the provided repository
 
         :param repo_link: The link of the repo to clone (must be the SSH clone URL).
         :type repo_link: str
         """
         creds = pygit2.KeypairFromMemory(
-            username='git',
+            username="git",
             pubkey=self.git_public_key,
             privkey=self.git_private_key,
-            passphrase=self.git_key_passphrase
+            passphrase=self.git_key_passphrase,
         )
         self._pygit_callback = pygit2.RemoteCallbacks(credentials=creds)
-        self._local_repo = pygit2.clone_repository(repo_link, REPO_DIR, callbacks=self._pygit_callback)
+        self._local_repo = pygit2.clone_repository(
+            repo_link, REPO_DIR, callbacks=self._pygit_callback
+        )
 
     @staticmethod
-    def _fetch_repo_file_contents(
-            repo_rel_path: str
-    ) -> str:
+    def _fetch_repo_file_contents(repo_rel_path: str) -> str:
         """Returns a string containing the content of the requested file path
 
         :param repo_rel_path: The file whose contents to return, relative to the root of the git repo.
@@ -60,7 +58,7 @@ class Autocoder:
         """
         contents = None
         try:
-            with open(f"{REPO_DIR}/{repo_rel_path}", 'r') as fp:
+            with open(f"{REPO_DIR}/{repo_rel_path}", "r") as fp:
                 contents = fp.read()
             return contents
         except:
@@ -68,10 +66,7 @@ class Autocoder:
             raise
 
     @staticmethod
-    def _write_repo_file_contents(
-            repo_rel_path: str,
-            contents: str
-    ):
+    def _write_repo_file_contents(repo_rel_path: str, contents: str):
         """Overwrites the provided content to the provided file path.
 
         :param repo_rel_path: The relative path within the git repo to where the content should be written.
@@ -80,17 +75,13 @@ class Autocoder:
         :type contents: str
         """
         try:
-            with open(f"{REPO_DIR}/{repo_rel_path}", 'w') as fp:
+            with open(f"{REPO_DIR}/{repo_rel_path}", "w") as fp:
                 fp.write(contents)
         except:
             logger.error("Unable to write changes.")
             raise
 
-    def create_branch(
-            self,
-            branch_name: str = None,
-            desired_change: str = None
-    ) -> str:
+    def create_branch(self, branch_name: str = None, desired_change: str = None) -> str:
         """Creates and checks out a branch in the cloned repo.
 
         :param branch_name: The optional name of the branch to create, defaults to None. If None, a branch name is generated based on `desired_change` and `contributing`
@@ -110,20 +101,16 @@ class Autocoder:
             contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             if contributing:
                 prompt += f"\n\nFollow any branch naming convention within this guide, if any are stipulated:\n{contributing}"
-            
+
             resp = self._llm.generate_content(prompt)
-            branch_name = resp.text.strip().strip('```').strip("python")
+            branch_name = resp.text.strip().strip("```").strip("python")
 
         self._branch = self._local_repo.branches.local.create(branch_name, commit)
         self._branch.upstream = self._branch
         self._local_repo.checkout(self._branch)
         return branch_name
 
-    def apply_code_changes(
-            self,
-            path_to_code: str,
-            desired_change: str
-    ) -> (str, str):
+    def apply_code_changes(self, path_to_code: str, desired_change: str) -> (str, str):
         """Applies the desired changes to the given code file path.
 
         :param path_to_code: The file path containing the code to update.
@@ -135,17 +122,13 @@ class Autocoder:
         """
         existing_code = self._fetch_repo_file_contents(path_to_code)
         response = self._llm.generate_content(
-                f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only. if the desired changed does not affect the code, please provide the same existing code as your response:\n{desired_change}"
-            )
-        replacement_code = response.text.strip().strip('```').strip("python")
+            f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only. if the desired changed does not affect the code, please provide the same existing code as your response:\n{desired_change}"
+        )
+        replacement_code = response.text.strip().strip("```").strip("python")
         Autocoder._write_repo_file_contents(path_to_code, replacement_code)
         return existing_code, replacement_code
-    
-    def update_unit_tests(
-            self,
-            path_to_tests: str,
-            updated_code: str
-    ) -> str:
+
+    def update_unit_tests(self, path_to_tests: str, updated_code: str) -> str:
         """Updates the existing unit tests based on the updated code provided.
 
         :param path_to_tests: The relative path of the unit tests to update.
@@ -160,17 +143,17 @@ class Autocoder:
 
         response = self._llm.generate_content(replacement_unit_tests_prompt)
         logger.info(f"New unit tests: {response}")
-        replacement_unit_tests = response.text.strip().strip('```').strip("python")
+        replacement_unit_tests = response.text.strip().strip("```").strip("python")
         self._write_repo_file_contents(path_to_tests, replacement_unit_tests)
         return replacement_unit_tests
-    
+
     def create_commit(
-            self,
-            existing_code: str,
-            replacement_code: str,
-            commit_message: str = None,
-            author_email: str = 'lapeyus@gmail.com',
-            author_name: str = 'lapeyus'
+        self,
+        existing_code: str,
+        replacement_code: str,
+        commit_message: str = None,
+        author_email: str = "lapeyus@gmail.com",
+        author_name: str = "lapeyus",
     ) -> str:
         """Adds all modified files and creates a commit in the branch. `apply_code_changes` and `update_unit_tests` should be called before calling this.
 
@@ -193,9 +176,7 @@ class Autocoder:
             contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             if contributing:
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
-            response = self._llm.generate_content(
-                commit_msg_prompt
-            )
+            response = self._llm.generate_content(commit_msg_prompt)
             commit_message = response.text
 
         commit_message += f"\n\nSigned-off-by: {author_name} <{author_email}>"
@@ -209,25 +190,26 @@ class Autocoder:
         committer = author
         print(author, committer)
         tree = index.write_tree()
-        self._local_repo.create_commit(ref, author, committer, commit_message, tree, parents)
+        self._local_repo.create_commit(
+            ref, author, committer, commit_message, tree, parents
+        )
         return commit_message
 
-    def push_remote(
-            self,
-            remote_name: str = 'origin'
-    ):
+    def push_remote(self, remote_name: str = "origin"):
         """Pushes the commit to the remote.
 
         :param remote_name: The remote to which changes should be pushed, defaults to 'origin'
         :type remote_name: str, optional
         """
-        self._local_repo.remotes[remote_name].push([self._branch.upstream_name], self._pygit_callback)
+        self._local_repo.remotes[remote_name].push(
+            [self._branch.upstream_name], self._pygit_callback
+        )
 
     def create_pr(
-            self,
-            repo_id: int,
-            issue_number: int,
-            commit_message: str = None,
+        self,
+        repo_id: int,
+        issue_number: int,
+        commit_message: str = None,
     ):
         """Creates a pull request in GitHub and ties it to the given issue.
 
@@ -244,11 +226,9 @@ class Autocoder:
             contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             if contributing:
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
-            response = self._llm.generate_content(
-                commit_msg_prompt
-            )
+            response = self._llm.generate_content(commit_msg_prompt)
             commit_message = response.text
-            
+
         logger.info(f"repo_id: {repo_id}")
         logger.info(f"issue_id: {issue_number}")
         repo = self._github.get_repo(repo_id)
@@ -260,17 +240,14 @@ class Autocoder:
             logger.info(issue_instance.id)
         issue = repo.get_issue(issue_number)
         repo.create_pull(
-            base='main',
+            base="main",
             head=self._branch.branch_name,
             body=commit_message,
             maintainer_can_modify=True,
-            issue=issue
+            issue=issue,
         )
 
     @staticmethod
     def cleanup_local_dir():
-        """Deletes the locally cloned repository files.
-        """
+        """Deletes the locally cloned repository files."""
         shutil.rmtree(REPO_DIR, True)
-        
-        

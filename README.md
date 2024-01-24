@@ -4,13 +4,13 @@ Original Author: Evan Seabrook
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
 ![image](./assets/genai_gh_workflow.png)
-1. A user submits a new issue within the GitHub repository outlining in plain language what change they would like to see. 
+1. A user submits a new issue within the GitHub repository outlining in plain language what change they would like to see.
 
-2. A webhook configured to fire for new issues posts the details to a Cloud Function hosted within my Google Cloud project, which clones the repository. 
+2. A webhook configured to fire for new issues posts the details to a Cloud Function hosted within my Google Cloud project, which clones the repository.
 
-3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI to interpret and make the requested changes. 
+3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI to interpret and make the requested changes.
 
-4. The Cloud Function pushes the changes to the repository and opens a pull request referencing the original issue. 
+4. The Cloud Function pushes the changes to the repository and opens a pull request referencing the original issue.
 
 **IMPORTANT:** To prevent an influx of personal cloud costs, I have disabled the webhook. I encourage folks that are interested in this project to fork this repository and experiment with it yourselves.
 
