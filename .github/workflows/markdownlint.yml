@@ -1,5 +1,4 @@
 name: Markdownlint
-
 on:
   push:
     paths:
@@ -7,12 +6,9 @@ on:
   pull_request:
     paths:
       - "**/*.md"
-
 jobs:
   lint:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675 #@v2
     - name: Use Node.js
