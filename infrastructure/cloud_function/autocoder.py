@@ -89,7 +89,6 @@ class Autocoder:
     def create_branch(
             self,
             branch_name: str = None,
-            contributing: str = None,
             desired_change: str = None
     ) -> str:
         """Creates and checks out a branch in the cloned repo.
@@ -108,6 +107,7 @@ class Autocoder:
         if not branch_name:
             prompt = f"Create an appropriate git feature branch name based on the requested code change -- do NOT format with markdown:\n{desired_change}"
 
+            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             if contributing:
                 prompt += f"\n\nFollow any branch naming convention within this guide, if any are stipulated:\n{contributing}"
             
@@ -169,7 +169,6 @@ class Autocoder:
             existing_code: str,
             replacement_code: str,
             commit_message: str = None,
-            contributing: str = None,
             author_email: str = 'lapeyus@gmail.com',
             author_name: str = 'lapeyus'
     ) -> str:
@@ -191,6 +190,7 @@ class Autocoder:
         if not commit_message:
             commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}"
 
+            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             if contributing:
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
             response = self._llm.generate_content(
@@ -227,7 +227,7 @@ class Autocoder:
             self,
             repo_id: int,
             issue_number: int,
-            commit_message: str,
+            commit_message: str = None,
     ):
         """Creates a pull request in GitHub and ties it to the given issue.
 
@@ -238,7 +238,17 @@ class Autocoder:
         :param commit_message: The commit message to use as the PR's body.
         :type commit_message: str
         """
+        if not commit_message:
+            commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything."
 
+            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
+            if contributing:
+                commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
+            response = self._llm.generate_content(
+                commit_msg_prompt
+            )
+            commit_message = response.text
+            
         logger.info(f"repo_id: {repo_id}")
         logger.info(f"issue_id: {issue_number}")
         repo = self._github.get_repo(repo_id)

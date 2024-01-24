@@ -57,29 +57,20 @@ def handle_issue(request):
 
     try:
         autocoder_app.clone_repository(git_repo)
-        contributing = None
-        try:
-            contributing = autocoder_app._fetch_repo_file_contents("CONTRIBUTING.md")
-        except:
-            logger.info("No existing CONTRIBUTING.md to use.")
-            pass
-
         desired_change = parsed_body["change_request"]["description"]
-        autocoder_app.create_branch(contributing=contributing, desired_change=desired_change)
+        autocoder_app.create_branch(desired_change=desired_change)
         
         # Iterate through each affected file and create a commit
         for file in parsed_body["change_request"]["affected_files"]:
             existing_code, updated_code = autocoder_app.apply_code_changes(file, desired_change)
             autocoder_app.create_commit(
-                existing_code=existing_code, replacement_code=updated_code, contributing=contributing
-                # , commit_message=desired_change
+                existing_code=existing_code, replacement_code=updated_code 
             )
         
         autocoder_app.push_remote()
         autocoder_app.create_pr(
             repo_id=git_repo_id,
-            issue_number=issue_number,
-            commit_message=desired_change
+            issue_number=issue_number            
         )
     except BaseException as e:
         return (json.dumps({"err": str(e) }), 500, return_headers)
