@@ -8,7 +8,7 @@ This project was created to explore how Generative AI could help facilitate code
 
 2. A webhook configured to fire for new issues posts the details to a Cloud Function hosted within my Google Cloud project, which clones the repository. 
 
-3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI viaVertex AI to interpret and make the requested changes. 
+3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI to interpret and make the requested changes. 
 
 4. The Cloud Function pushes the changes to the repository and opens a pull request referencing the original issue. 
 
