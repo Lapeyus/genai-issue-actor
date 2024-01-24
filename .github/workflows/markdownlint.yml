@@ -18,4 +18,4 @@ jobs:
     - name: Run Markdownlint
       run: |
         npm i -g markdownlint-cli@0.22.0
-        markdownlint "**/*.md"
+        markdownlint "**/*.md" -c .markdownlint.json
