@@ -6,6 +6,18 @@ resource "google_service_account" "service_account" {
   project      = google_project.main.project_id
 }
 
+module "terraform_sa_organization_iam_bindings" {
+  source        = "terraform-google-modules/iam/google//modules/organizations_iam"
+  version       = "7.6.0"
+  organizations = [var.org]
+  mode          = "additive"
+
+  bindings = {
+    "roles/resourcemanager.folderAdmin" = ["serviceAccount:${google_service_account.service_account.email}"],
+  }
+}
+
+
 module "terraform_sa_project_iam_bindings" {
   source   = "terraform-google-modules/iam/google//modules/projects_iam"
   version  = "7.6.0"

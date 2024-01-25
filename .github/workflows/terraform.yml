@@ -113,10 +113,10 @@ jobs:
         run: terraform plan
 
       # Generates an execution APPLY for Terraform
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        working-directory: ./infrastructure/terraform
-        run: terraform apply -auto-approve
+      # - name: Terraform Apply
+      #   if: github.ref == 'refs/heads/main'
+      #   working-directory: ./infrastructure/terraform
+      #   run: terraform apply -auto-approve
 
   docs:
     name: 'Terraform docs'

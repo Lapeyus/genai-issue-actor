@@ -10,6 +10,12 @@ variable "parent" {
   default     = "folders/#"
 }
 
+variable "org" {
+  description = "google_org"
+  type        = string
+  default     = ""
+}
+
 variable "project_name" {
   description = "Name of the new project."
   type        = string
