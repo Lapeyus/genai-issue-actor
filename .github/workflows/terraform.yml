@@ -11,21 +11,21 @@ jobs:
         uses: robertdebock/terraform-action@1.1.4
         with:
           action: init
-          directory: ./example
+          directory: ./infrastructure/terraform
       - name: terraform validate
         uses: robertdebock/terraform-action@1.1.4
         with:
           action: validate
-          directory: ./example
+          directory: ./infrastructure/terraform
       - name: terraform plan
         uses: robertdebock/terraform-action@1.1.4
         with:
           action: plan
-          directory: ./example
+          directory: ./infrastructure/terraform
       # - name: terraform apply
       #   uses: robertdebock/terraform-action@1.1.4
       #   with:
       #     action: apply
-      #     directory: ./example
+      #     directory: ./infrastructure/terraform
       #   env:
       #     TF_CLI_ARGS: "-input=false -auto-approve"
