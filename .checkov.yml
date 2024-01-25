@@ -1,0 +1,22 @@
+compact: false
+download-external-modules: false
+evaluate-variables: true
+external-modules-download-path: .external_modules
+framework: all
+output: cli
+quiet: false
+skip-check:
+  - CKV_GCP_27 #"Ensure that the default network does not exist in a project"
+  - CKV_GCP_114 #"Ensure public access prevention is enforced on Cloud Storage bucket"
+  - CKV_GCP_62 #"Bucket should log access"
+  - CKV_GCP_78 #"Ensure Cloud storage has versioning enabled"
+  - CKV_GCP_102 #"Ensure that GCP Cloud Run services are not anonymously or publicly accessible"
+  - CKV_GCP_49 #"Ensure roles do not impersonate or manage Service Accounts used at project level"
+  - CKV_GCP_117 #"Ensure basic roles are not used at project level."
+  - CKV_GCP_114 #"Ensure public access prevention is enforced on Cloud Storage bucket"
+  - CKV_GCP_29 #"Ensure that Cloud Storage buckets have uniform bucket-level access enabled"
+  - CKV2_GCP_5 #"Ensure that Cloud Audit Logging is configured properly across all services and all users from a project"
+  - CKV_DOCKER_2 #"Ensure that HEALTHCHECK instructions have been added to container images"
+  - CKV_DOCKER_3 #"Ensure that a user for the container has been created"
+
+soft-fail: false

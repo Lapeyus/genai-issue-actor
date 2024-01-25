@@ -52,7 +52,7 @@ jobs:
         run: pip install checkov
 
       - name: Run Checkov
-        run: checkov --config-file ./.github/checkov.yml
+        run: checkov --config-file .checkov.yml
 
   terraform:
       name: 'Terraforming'
