@@ -98,9 +98,12 @@ class Autocoder:
         if not branch_name:
             prompt = f"Create an appropriate git feature branch name based on the requested code change -- do NOT format with markdown:\n{desired_change}"
 
-            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-            if contributing:
-                prompt += f"\n\nFollow any branch naming convention within this guide, if any are stipulated:\n{contributing}"
+            try:
+                contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
+                commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
+            except:
+                logger.info("No existing CONTRIBUTING.md to use.")
+                pass
 
             resp = self._llm.generate_content(prompt)
             branch_name = resp.text.strip().strip("```").strip("python")
@@ -173,9 +176,13 @@ class Autocoder:
         if not commit_message:
             commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}"
 
-            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-            if contributing:
+            try:
+                contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
+            except:
+                logger.info("No existing CONTRIBUTING.md to use.")
+                pass
+
             response = self._llm.generate_content(commit_msg_prompt)
             commit_message = response.text
 
@@ -223,9 +230,13 @@ class Autocoder:
         if not commit_message:
             commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything."
 
-            contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-            if contributing:
+            try:
+                contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
                 commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
+            except:
+                logger.info("No existing CONTRIBUTING.md to use.")
+                pass
+
             response = self._llm.generate_content(commit_msg_prompt)
             commit_message = response.text
 
