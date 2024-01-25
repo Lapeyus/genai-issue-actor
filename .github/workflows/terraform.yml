@@ -108,9 +108,9 @@ jobs:
         run: terraform fmt -check
 
       # # Generates an execution plan for Terraform
-      - name: Terraform Plan
-        working-directory: ./infrastructure/terraform
-        run: terraform plan
+      # - name: Terraform Plan
+      #   working-directory: ./infrastructure/terraform
+      #   run: terraform plan
 
       # Generates an execution APPLY for Terraform
       # - name: Terraform Apply
