@@ -1,5 +1,9 @@
 terraform {
   required_version = ">= 1.5.6"
+  backend "gcs" {
+    bucket = "ea500bdab2f5a177-bucket-tfstate"
+    prefix = "terraform/state"
+  }
 
   required_providers {
     google = {
@@ -16,7 +20,6 @@ terraform {
     }
   }
 }
-
 
 provider "google" {
   project = "genai-issue-actor"

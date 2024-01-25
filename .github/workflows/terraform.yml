@@ -1,31 +1,130 @@
----
 on:
-  - push
+  push:
+    # paths-ignore:
+    #   - './bootstrap/README.md'
+    branches:
+      - '*'
+  pull_request:
+    # paths-ignore:
+    #   - './bootstrap/README.md'
+    branches:
+      - '*'
+  workflow_dispatch:
+
+concurrency:
+  group: unique-execution
+
+permissions:
+  contents: 'write'
+  id-token: 'write'
+
+env:
+  GOOGLE_PROJECT: genai-issue-actor
+  GOOGLE_BUCKET: ea500bdab2f5a177-bucket-tfstate
+
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  tflint:
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: terraform init
-        uses: robertdebock/terraform-action@1.1.4
+    - uses: actions/checkout@v3
+      name: Checkout source code
+    - uses: actions/cache@v3
+      name: Cache plugin dir
+      with:
+        path: ~/.tflint.d/plugins
+        key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
+    - uses: terraform-linters/setup-tflint@v3
+      name: Setup TFLint
+      with:
+        tflint_version: v0.44.1
+    - name: Run TFLint
+      run: tflint --recursive
+
+  checkov:
+    name: 'Checkov scan'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run Checkov
+        run: checkov --config-file ./.github/checkov.yml
+
+  terraform:
+      name: 'Terraforming'
+      runs-on: ubuntu-latest
+      needs: [checkov,tflint]
+
+      # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+      defaults:
+        run:
+          shell: bash
+
+      steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          action: init
-          directory: ./infrastructure/terraform
-      - name: terraform validate
-        uses: robertdebock/terraform-action@1.1.4
+          terraform_version: "1.5.3"
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
         with:
-          action: validate
-          directory: ./infrastructure/terraform
-      - name: terraform plan
-        uses: robertdebock/terraform-action@1.1.4
+          workload_identity_provider: 'projects/734894532576/locations/global/workloadIdentityPools/github-terraformer/providers/gh-actions'
+          service_account: 'tf-service-account@${{ env.GOOGLE_PROJECT }}.iam.gserviceaccount.com'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Use gcloud CLI'
+        run: 'gcloud info'
+
+      - name: Check auth outputs
+        run: 'echo The following are the outputs from the auth step: ${{ steps.auth.outputs }}'
+
+      # Initialize a new or existing Terrafoashicorp/setup-terraform@v1rm working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        working-directory: ./infrastructure/terraform
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
+          terraform init -backend-config="bucket=${{ env.GOOGLE_BUCKET }}"
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        working-directory: ./infrastructure/terraform
+        run: terraform fmt -check
+
+      # # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        working-directory: ./infrastructure/terraform
+        run: terraform plan
+
+      # Generates an execution APPLY for Terraform
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./infrastructure/terraform
+        run: terraform apply -auto-approve
+
+  docs:
+    name: 'Terraform docs'
+    runs-on: ubuntu-latest
+    needs: [terraform]
+    steps:
+      - uses: actions/checkout@v3
         with:
-          action: plan
-          directory: ./infrastructure/terraform
-      # - name: terraform apply
-      #   uses: robertdebock/terraform-action@1.1.4
-      #   with:
-      #     action: apply
-      #     directory: ./infrastructure/terraform
-      #   env:
-      #     TF_CLI_ARGS: "-input=false -auto-approve"
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Render terraform docs inside the README.md and push changes back to PR branch
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: ./infrastructure/terraform
+          output-file: README.md
+          output-method: replace
+          git-push: "true"
