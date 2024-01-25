@@ -131,25 +131,6 @@ class Autocoder:
         Autocoder._write_repo_file_contents(path_to_code, replacement_code)
         return existing_code, replacement_code
 
-    def update_unit_tests(self, path_to_tests: str, updated_code: str) -> str:
-        """Updates the existing unit tests based on the updated code provided.
-
-        :param path_to_tests: The relative path of the unit tests to update.
-        :type path_to_tests: str
-        :param updated_code: The new code that the unit tests need to be adapted for.
-        :type updated_code: str
-        :return: The adapted unit tests.
-        :rtype: str
-        """
-        existing_tests = self._fetch_repo_file_contents(path_to_tests)
-        replacement_unit_tests_prompt = f"Given the existing code:\n{updated_code}\n\nPlease change the unit tests below to work with the above code. Provide just the new version of the unit tests -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only: \n\n{existing_tests}"
-
-        response = self._llm.generate_content(replacement_unit_tests_prompt)
-        logger.info(f"New unit tests: {response}")
-        replacement_unit_tests = response.text.strip().strip("```").strip("python")
-        self._write_repo_file_contents(path_to_tests, replacement_unit_tests)
-        return replacement_unit_tests
-
     def create_commit(
         self,
         existing_code: str,
@@ -158,7 +139,7 @@ class Autocoder:
         author_email: str = "lapeyus@gmail.com",
         author_name: str = "lapeyus",
     ) -> str:
-        """Adds all modified files and creates a commit in the branch. `apply_code_changes` and `update_unit_tests` should be called before calling this.
+        """Adds all modified files and creates a commit in the branch. `apply_code_changes` should be called before calling this.
 
         :param existing_code: The code as it previously was before any changes.
         :type existing_code: str
