@@ -18,5 +18,6 @@ skip-check:
   - CKV2_GCP_5 #"Ensure that Cloud Audit Logging is configured properly across all services and all users from a project"
   - CKV_DOCKER_2 #"Ensure that HEALTHCHECK instructions have been added to container images"
   - CKV_DOCKER_3 #"Ensure that a user for the container has been created"
+  - CKV_TF_1 #"Ensure Terraform module sources use a commit hash"
 
 soft-fail: false

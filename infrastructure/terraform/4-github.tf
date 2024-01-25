@@ -6,13 +6,25 @@ resource "google_service_account" "service_account" {
   project      = google_project.main.project_id
 }
 
-# Bind the owner role to the service account
-resource "google_project_iam_binding" "owner" {
-  project = google_project.main.project_id
-  role    = "roles/owner"
+module "terraform_sa_project_iam_bindings" {
+  source   = "terraform-google-modules/iam/google//modules/projects_iam"
+  version  = "7.6.0"
+  projects = [google_project.main.project_id]
+  mode     = "additive"
 
-  members = ["serviceAccount:${google_service_account.service_account.email}"]
+  bindings = {
+    "roles/serviceusage.serviceUsageAdmin" = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/iam.serviceAccountKeyAdmin"     = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/iam.serviceAccountAdmin"        = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/iam.serviceAccountTokenCreator" = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/iam.workloadIdentityUser"       = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/iam.workloadIdentityPoolAdmin"  = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/storage.objectCreator"          = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/storage.objectViewer"           = ["serviceAccount:${google_service_account.service_account.email}"],
+    "roles/storage.admin"                  = ["serviceAccount:${google_service_account.service_account.email}"],
+  }
 }
+
 /* ------------------- Workload Identity Federation for github actions --------- */
 resource "google_iam_workload_identity_pool" "idp_pool" {
   workload_identity_pool_id = "github-terraformer"
