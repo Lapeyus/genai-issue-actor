@@ -15,7 +15,7 @@ REGION = os.getenv("REGION")
 PROJECT_ID = os.getenv("PROJECT_ID")
 
 st.set_page_config(
-    page_title="Wynnsights", page_icon="👊", layout="wide", initial_sidebar_state="auto"
+    page_title="Wynnsights", page_icon="🐶", layout="wide", initial_sidebar_state="auto"
 )
 
 if "dataframe" not in st.session_state:
