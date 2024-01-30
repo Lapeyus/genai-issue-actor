@@ -7,6 +7,10 @@ from main import handle_issue
 
 
 class TestHandleIssue(unittest.TestCase):
+    @patch.dict(
+        "os.environ",
+        {"PROJECT_ID": "test_project_id", "PUBSUB_TOPIC": "test_topic_name"},
+    )
     def setUp(self):
         self.request = MagicMock()
         self.request.get_json = MagicMock()
