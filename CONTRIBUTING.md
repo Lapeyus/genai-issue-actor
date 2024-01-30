@@ -1,6 +1,10 @@
 # Contributing
 
-Please follow the below guidelines when considering making changes to this repo.
+Welcome to our open-source project! We appreciate your interest in contributing to our codebase. By following these guidelines, you can help us maintain a high standard of quality and consistency.
+
+## Code of Conduct
+
+We expect all contributors to follow a code of conduct that promotes a welcoming, inclusive, and respectful environment for everyone involved. Please read our Code of Conduct before contributing to our project.
 
 ## Commit Messages
 
@@ -49,3 +53,17 @@ feat(api)!: send an email to the customer when a product is shipped
 ```text
 docs: correct spelling of CHANGELOG
 ```
+
+## Pull Requests
+
+When creating a pull request, please follow these guidelines:
+
+- **Ensure Your Code Changes Are Relevant:** Make sure that the changes you are proposing are relevant to the project and align with its goals. Avoid making unrelated or off-topic changes.
+- **Write Clear and Concise Commit Messages:** Use descriptive commit messages that clearly explain the purpose and impact of your changes. Refer to the "Commit Messages" section above for more details.
+- **Adhere to Coding Standards:** Follow the coding standards and conventions used in the project. This ensures consistency and readability of the codebase.
+- **Test Your Changes Thoroughly:** Before submitting a pull request, ensure that you have tested your changes thoroughly to verify their correctness and functionality.
+- **Document Your Changes:** Include appropriate documentation for new features or significant changes. Update existing documentation if necessary.
+
+## Communication and Collaboration
+
+We encourage open communication and collaboration among contributors. Feel free to ask questions, share ideas, and discuss potential improvements with the project maintainers and other contributors. Let's work together to make this project even better!
