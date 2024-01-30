@@ -15,7 +15,10 @@ REGION = os.getenv("REGION")
 PROJECT_ID = os.getenv("PROJECT_ID")
 
 st.set_page_config(
-    page_title="Wynnsights", page_icon="👊", layout="wide", initial_sidebar_state="auto"
+    page_title="Wynnsights",
+    page_icon="🤖",  # Changed the page icon to "robot"
+    layout="wide",
+    initial_sidebar_state="auto",
 )
 
 if "dataframe" not in st.session_state:
@@ -61,7 +64,6 @@ llm = VertexAI(
 )
 prompt = PromptTemplate.from_template(template)
 chain = prompt | llm
-
 
 loader = BigQueryLoader(query=schema_query, page_content_columns="ddl")
 data = loader.load()
