@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-
 import functions_framework
 from autocoder import Autocoder
 from cloudevents.http import CloudEvent
