@@ -1,7 +1,11 @@
 import json
+import os
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
+
+os.environ["PROJECT_ID"] = "mock_project_id"
+os.environ["PUBSUB_TOPIC"] = "mock_pubsub_topic"
 
 from main import handle_issue
 
