@@ -1,7 +1,75 @@
+resource "random_id" "default" {
+  byte_length = 8
+}
+
+resource "google_storage_bucket" "default" {
+  name                        = "${random_id.default.hex}-gcf-source"
+  location                    = "US"
+  uniform_bucket_level_access = true
+}
+
+data "archive_file" "default" {
+  type        = "zip"
+  output_path = "event_handler.zip"
+  source_dir  = "../cloud_functions/event_handler/"
+}
+
+resource "google_storage_bucket_object" "object" {
+  name   = "event_handler.zip"
+  bucket = google_storage_bucket.default.name
+  source = data.archive_file.default.output_path
+}
+
+resource "google_cloudfunctions2_function" "event_handler" {
+  name        = "event_handler"
+  location    = var.region
+  description = "event_handler"
+
+  build_config {
+    runtime     = "python312"
+    entry_point = "handle_issue"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.default.name
+        object = google_storage_bucket_object.object.name
+      }
+    }
+
+    environment_variables = {
+      PROJECT_ID   = google_project.main.project_id
+      PUBSUB_TOPIC = google_pubsub_topic.issue_processing_topic.name
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "256M"
+    timeout_seconds    = 60
+    available_cpu      = "167m"
+    ingress_settings   = "ALLOW_ALL"
+
+    environment_variables = {
+      PROJECT_ID   = google_project.main.project_id
+      PUBSUB_TOPIC = google_pubsub_topic.issue_processing_topic.name
+    }
+
+  }
+}
+
+resource "google_cloudfunctions2_function_iam_member" "invoker" {
+  project        = google_cloudfunctions2_function.event_handler.project
+  location       = var.region
+  cloud_function = google_cloudfunctions2_function.event_handler.name
+  role           = "roles/cloudfunctions.invoker"
+  member         = "allUsers"
+}
+
+################################################################################################################
+################################################################################################
 data "archive_file" "event_processor" {
   type        = "zip"
   output_path = "event_processor.zip"
-  source_dir  = "../event_processor/"
+  source_dir  = "../cloud_functions/event_processor/"
 }
 
 resource "google_storage_bucket_object" "event_processor" {

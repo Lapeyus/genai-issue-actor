@@ -1,12 +1,17 @@
+name: Terraform validation
 on:
   push:
-    # paths-ignore:
-    #   - './bootstrap/README.md'
+    paths:
+      - terraform/**
+    paths-ignore:
+      - './terraform/README.md'
     branches:
       - '*'
   pull_request:
-    # paths-ignore:
-    #   - './bootstrap/README.md'
+    paths:
+      - terraform/**
+    paths-ignore:
+      - './terraform/README.md'
     branches:
       - '*'
   workflow_dispatch:
@@ -97,25 +102,25 @@ jobs:
 
       # Initialize a new or existing Terrafoashicorp/setup-terraform@v1rm working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
-        working-directory: ./infrastructure/terraform
+        working-directory: ./terraform
         run: |
           export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
           terraform init -backend-config="bucket=${{ env.GOOGLE_BUCKET }}"
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
-        working-directory: ./infrastructure/terraform
+        working-directory: ./terraform
         run: terraform fmt -check
 
       # # Generates an execution plan for Terraform
       # - name: Terraform Plan
-      #   working-directory: ./infrastructure/terraform
+      #   working-directory: ./terraform
       #   run: terraform plan
 
       # Generates an execution APPLY for Terraform
       # - name: Terraform Apply
       #   if: github.ref == 'refs/heads/main'
-      #   working-directory: ./infrastructure/terraform
+      #   working-directory: ./terraform
       #   run: terraform apply -auto-approve
 
   docs:
@@ -129,7 +134,7 @@ jobs:
       - name: Render terraform docs inside the README.md and push changes back to PR branch
         uses: terraform-docs/gh-actions@v1.0.0
         with:
-          working-dir: ./infrastructure/terraform
+          working-dir: ./terraform
           output-file: README.md
           output-method: replace
           git-push: "true"

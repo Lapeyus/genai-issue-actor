@@ -8,7 +8,7 @@ from main import event_processor
 
 
 class TestEventProcessor(unittest.TestCase):
-    @patch("your_module_name.Autocoder")  # Mock the Autocoder class
+    @patch("your_module_name.Autocoder")
     @patch.dict(
         "os.environ",
         {
