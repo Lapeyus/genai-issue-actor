@@ -3,15 +3,15 @@ on:
   push:
     paths:
       - terraform/**
-    paths-ignore:
-      - './terraform/README.md'
+    # paths-ignore:
+    #   - './terraform/README.md'
     branches:
       - '*'
   pull_request:
     paths:
       - terraform/**
-    paths-ignore:
-      - './terraform/README.md'
+    # paths-ignore:
+    #   - './terraform/README.md'
     branches:
       - '*'
   workflow_dispatch:

@@ -38,6 +38,7 @@ jobs:
         python -m pip install --upgrade pip
     - name: Test cloud_function with unittest
       run: |
-        pip install -r cloud_function/requirements.txt
+        pip install -r cloud_function/cloud_function/requirements.txt
         python -m unittest discover cloud_function/
+        pip install -r cloud_function/event_processor/requirements.txt
         python -m unittest discover event_processor/
