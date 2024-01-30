@@ -17,3 +17,4 @@ cdktf.log
 venv/
 .vscode
 *.tfvars
+*.zip

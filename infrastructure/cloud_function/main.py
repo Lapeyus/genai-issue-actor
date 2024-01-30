@@ -1,25 +1,21 @@
 import base64
 import json
 import logging
-import os
 
 import functions_framework
-from autocoder import Autocoder
+from google.cloud import pubsub_v1
+from utility import get_env_variable
 from utility import parse_issue_body
 
 logging.basicConfig()
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-project_id = os.getenv("PROJECT_ID")
-location = os.getenv("LOCATION")
-github_pat = os.getenv("GITHUB_PAT")
-github_private_key = base64.b64decode(os.getenv("PRIVATE_KEY")).decode("utf-8")
-github_public_key = base64.b64decode(os.getenv("PUBLIC_KEY")).decode("utf-8")
-git_key_passphrase = base64.b64decode(os.getenv("PASS_KEY")).decode("utf-8")
-llm = os.getenv("GENAI_MODEL")
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+project_id = get_env_variable("PROJECT_ID")
+pubsub_topic = get_env_variable("PUBSUB_TOPIC")
+
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(project_id, pubsub_topic)
 
 
 @functions_framework.http
@@ -28,6 +24,7 @@ def handle_issue(request):
     return_headers = {"Content-Type": "application/json"}
 
     if "action" not in request_json:
+        logger.info("Request body does not include an action")
         return (
             json.dumps({"err": 'Request body does not include an "action"'}),
             400,
@@ -47,44 +44,10 @@ def handle_issue(request):
             200,
             return_headers,
         )
-
-    git_repo = request_json["repository"]["ssh_url"]
-    git_repo_id = int(request_json["repository"]["id"])
-    issue_number = int(request_json["issue"]["number"])
-    issue_body = request_json["issue"]["body"]
-
-    parsed_body = parse_issue_body(issue_body)
-    logger.info(f"Git repo: {git_repo}")
-    logger.info(f"Issue body: {issue_body}")
-
-    autocoder_app = Autocoder(
-        github_private_key,
-        github_public_key,
-        github_pat,
-        git_key_passphrase,
-        llm=llm,
-        gemini_api_key=gemini_api_key,
-    )
-
     try:
-        autocoder_app.clone_repository(git_repo)
-        desired_change = parsed_body["change_request"]["description"]
-        autocoder_app.create_branch(desired_change=desired_change)
-
-        # Iterate through each affected file and create a commit
-        for file in parsed_body["change_request"]["affected_files"]:
-            existing_code, updated_code = autocoder_app.apply_code_changes(
-                file, desired_change
-            )
-            autocoder_app.create_commit(
-                existing_code=existing_code, replacement_code=updated_code
-            )
-
-        autocoder_app.push_remote()
-        autocoder_app.create_pr(repo_id=git_repo_id, issue_number=issue_number)
+        request_json["issue"]["body"] = parse_issue_body(request_json["issue"]["body"])
+        publisher.publish(topic_path, json.dumps(request_json).encode("utf-8"))
+        logger.info("Sent to processor queue")
+        return (json.dumps({"msg": "ok"}), 200, return_headers)
     except BaseException as e:
         return (json.dumps({"err": str(e)}), 500, return_headers)
-    finally:
-        Autocoder.cleanup_local_dir()
-
-    return (json.dumps({"msg": "ok"}), 200, return_headers)

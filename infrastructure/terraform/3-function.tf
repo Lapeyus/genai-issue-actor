@@ -10,7 +10,7 @@ resource "google_storage_bucket" "default" {
 
 data "archive_file" "default" {
   type        = "zip"
-  output_path = "../cloud_function/function-source.zip"
+  output_path = "function-source.zip"
   source_dir  = "../cloud_function/"
 }
 
@@ -26,7 +26,7 @@ resource "google_cloudfunctions2_function" "default" {
   description = "a new function"
 
   build_config {
-    runtime     = "python310"
+    runtime     = "python312"
     entry_point = "handle_issue"
     source {
       storage_source {
@@ -36,57 +36,20 @@ resource "google_cloudfunctions2_function" "default" {
     }
 
     environment_variables = {
-      PROJECT_ID  = google_project.main.project_id
-      LOCATION    = var.region
-      GENAI_MODEL = var.llm
+      PROJECT_ID   = google_project.main.project_id
+      PUBSUB_TOPIC = google_pubsub_topic.issue_processing_topic.name
     }
   }
 
   service_config {
     max_instance_count = 1
-    available_memory   = "2G"
+    available_memory   = "256M"
     timeout_seconds    = 60
-    available_cpu      = "1"
+    available_cpu      = "167m"
 
     environment_variables = {
-      PROJECT_ID  = google_project.main.project_id
-      LOCATION    = var.region
-      GENAI_MODEL = var.llm
-    }
-
-    secret_environment_variables {
-      key        = "GITHUB_PAT"
-      project_id = google_project.main.project_id
-      secret     = google_secret_manager_secret.github_pat_secret.secret_id
-      version    = "latest"
-    }
-
-    secret_environment_variables {
-      key        = "PRIVATE_KEY"
-      project_id = google_project.main.project_id
-      secret     = google_secret_manager_secret.private_key_secret.secret_id
-      version    = "latest"
-    }
-
-    secret_environment_variables {
-      key        = "PUBLIC_KEY"
-      project_id = google_project.main.project_id
-      secret     = google_secret_manager_secret.public_key_secret.secret_id
-      version    = "latest"
-    }
-
-    secret_environment_variables {
-      key        = "PASS_KEY"
-      project_id = google_project.main.project_id
-      secret     = google_secret_manager_secret.git_key_passphrase.secret_id
-      version    = "latest"
-    }
-
-    secret_environment_variables {
-      key        = "GEMINI_API_KEY"
-      project_id = google_project.main.project_id
-      secret     = google_secret_manager_secret.gemini_api_key.secret_id
-      version    = "latest"
+      PROJECT_ID   = google_project.main.project_id
+      PUBSUB_TOPIC = google_pubsub_topic.issue_processing_topic.name
     }
 
   }

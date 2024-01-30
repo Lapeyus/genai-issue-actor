@@ -10,11 +10,13 @@ Deprecated==1.2.14
 deprecation==2.1.0
 Flask==3.0.0
 functions-framework==3.5.0
+functions-framework==3.5.0
 google-api-core==2.15.0
 google-auth==2.26.1
 google-cloud-aiplatform==1.38.1
 google-cloud-bigquery==3.14.1
 google-cloud-core==2.4.1
+google-cloud-pubsub==2.19.0
 google-cloud-resource-manager==1.11.0
 google-cloud-storage==2.14.0
 google-crc32c==1.5.0
