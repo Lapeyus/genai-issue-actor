@@ -35,4 +35,4 @@ jobs:
         pip install -r infrastructure/cloud_function/requirements.txt
     - name: Test with unittest
       run: |
-        python -m unittest discover infrastructure/cloud_function/tests/
+        python -m unittest discover infrastructure/cloud_function/
