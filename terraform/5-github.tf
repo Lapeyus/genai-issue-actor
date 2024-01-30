@@ -77,3 +77,4 @@ resource "google_service_account_iam_binding" "workload_identity_binding" {
     # "serviceAccount:${google_project.main.project_id}.svc.id.goog[${NAMESPACE}/${var.service_account}]",
   ]
 }
+ 
