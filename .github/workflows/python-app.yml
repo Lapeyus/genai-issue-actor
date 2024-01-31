@@ -1,14 +1,5 @@
 name: Python validation
-on:
-  push:
-    paths:
-      - cloud_functions/**
-    branches: [ "*" ]
-  pull_request:
-    paths:
-      - cloud_functions/**
-    branches: [ "*" ]
-  workflow_dispatch:
+on:  push:    paths:      - cloud_functions/**    branches: [ "*" ]  pull_request:    paths:      - cloud_functions/**    branches: [ "*" ]  workflow_dispatch:
 
 concurrency:
   group: unique-execution
@@ -38,12 +29,12 @@ jobs:
         python -m pip install --upgrade pip
     - name: Test cloud_function with unittest
       env:
-        PRIVATE_KEY: "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK"        
-        PUBLIC_KEY: "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK"
-        PASS_KEY: "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK"
+        PRIVATE_KEY: ${{"SECRETS.PRIVATE_KEY"}}
+        PUBLIC_KEY: ${{"SECRETS.PUBLIC_KEY"}}
+        PASS_KEY: ${{"SECRETS.PASS_KEY"}}
         GEMINI_API_KEY: "mock_gemini_api_key"
         GITHUB_PAT: "mock_github_pat"
-        GENAI_MODEL: "gemini" 
+        GENAI_MODEL: "gemini"
       run: |
         pip install -r cloud_functions/event_handler/requirements.txt
         python -m unittest discover cloud_functions/event_handler
