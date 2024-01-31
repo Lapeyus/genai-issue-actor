@@ -5,6 +5,8 @@ import shutil
 import github
 import google.generativeai as genai
 import pygit2
+from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -95,18 +97,17 @@ class Autocoder:
         commit = self._local_repo.head.peel()
 
         if not branch_name:
-            prompt = f"Create an appropriate git feature branch name based on the requested code change -- do NOT format with markdown:\n{desired_change}"
-
+            contributing = ''
             try:
                 contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-                commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
             except:
                 logger.info("No existing CONTRIBUTING.md to use.")
                 pass
 
-            resp = self._llm.generate_content(prompt)
-            branch_name = resp.text.strip().strip("```").strip("python")
-
+            prompt_template = PromptTemplate.from_template("Create a branch name based on branch purpose:\n{desired_change}\nand this guidelines:\n{contributing}")
+            chain = prompt_template | self._llm | StrOutputParser()
+            branch_name = chain.invoke({"desired_change": desired_change, "contributing": contributing})
+        
         self._branch = self._local_repo.branches.local.create(branch_name, commit)
         self._branch.upstream = self._branch
         self._local_repo.checkout(self._branch)
