@@ -7,6 +7,10 @@ from unittest.mock import patch
 os.environ["PROJECT_ID"] = "mock_project_id"
 os.environ["PUBSUB_TOPIC"] = "mock_pubsub_topic"
 
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from main import handle_issue
 
 
