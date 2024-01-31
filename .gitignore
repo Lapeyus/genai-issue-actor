@@ -1,20 +1,25 @@
+```
+# Configured directories
 __pycache__
 .venv
 .DS_Store
 
+# Terraform specific directories
 *function-source.zip
 terraform.tfstate
-*terraform.tfstate.backup
+*terraform.tfstate.*
 .terraform/*
 .terraform.lock.hcl
 
-
+# CDKTF specific directories
 .terraform
 cdktf.out
 cdktf.log
 *terraform.*.tfstate*
 
+# Miscellaneous directories
 venv/
 .vscode
-*.tfvars
-*.zip
+tf
+zip
+```
