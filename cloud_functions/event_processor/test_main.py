@@ -12,7 +12,7 @@ class TestEventProcessor(unittest.TestCase):
         "PASS_KEY": base64.b64encode(b"mock_pass_key").decode("utf-8"),
         "GEMINI_API_KEY": "mock_gemini_api_key",
         "GITHUB_PAT": "mock_github_pat",
-        "GENAI_MODEL": "mock_genai_model",
+        "GENAI_MODEL": "gemini",
     }, clear=True)
     def test_event_processor_success(self, mock_autocoder):
         # Setup test data and mocks
