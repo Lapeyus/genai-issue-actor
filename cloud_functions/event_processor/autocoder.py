@@ -1,18 +1,27 @@
 import logging
 import os
 import shutil
-
 import github
-import google.generativeai as genai
+from langchain_google_genai import ChatGoogleGenerativeAI
 import pygit2
 from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain.output_parsers import PydanticOutputParser
+from langchain_core.pydantic_v1 import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 REPO_DIR = "local_repo"
 
+
+class GitBranch(BaseModel):
+    name: str = Field(description="valid name for a git branch")
+
+class GitFile(BaseModel):
+    file: str = Field(description="file contents")
+
+class GitCommit(BaseModel):
+    message: str = Field(description="a git commit message")
 
 class Autocoder:
     def __init__(
@@ -29,9 +38,7 @@ class Autocoder:
         self.git_key_passphrase = git_key_passphrase
         self._local_repo = None
         self._github = github.Github(git_pat)
-
-        genai.configure(api_key=gemini_api_key)
-        self._llm = genai.GenerativeModel(model_name=llm)
+        self._llm = ChatGoogleGenerativeAI(model=llm, google_api_key=gemini_api_key)
 
     def clone_repository(self, repo_link: str):
         """Clones the provided repository
@@ -102,11 +109,23 @@ class Autocoder:
                 contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
             except:
                 logger.info("No existing CONTRIBUTING.md to use.")
+                contributing = 'git best practices'
                 pass
-
-            prompt_template = PromptTemplate.from_template("Create a branch name based on branch purpose:\n{desired_change}\nand this guidelines:\n{contributing}")
-            chain = prompt_template | self._llm | StrOutputParser()
-            branch_name = chain.invoke({"desired_change": desired_change, "contributing": contributing})
+            parser = PydanticOutputParser(pydantic_object=GitBranch)            
+            prompt = PromptTemplate(
+                template="Create a branch name based on it's purpose:\n{desired_change}\nand this guidelines:\n{contributing}\nformat:{format_instructions}",
+                input_variables=["desired_change","contributing"],
+                partial_variables={
+                    "format_instructions": parser.get_format_instructions()
+                }
+            )            
+            chain = prompt | self._llm | parser
+            branch_name = chain.invoke(
+                {
+                    "desired_change": desired_change, 
+                    "contributing": contributing
+                }
+            ).name
         
         self._branch = self._local_repo.branches.local.create(branch_name, commit)
         self._branch.upstream = self._branch
@@ -123,13 +142,29 @@ class Autocoder:
         :return: The old and new code.
         :rtype: (str, str)
         """
-        existing_code = self._fetch_repo_file_contents(path_to_code)
-        response = self._llm.generate_content(
-            f"Given the below code:\n{existing_code}\n\nPlease adjust the code to fulfill the following change. Provide just the new version of the code -- Avoid using markdown formatting such as backticks and language name, the entire response string must be executable code only. if the desired changed does not affect the code, please provide the same existing code as your response:\n{desired_change}"
+        existing_file = self._fetch_repo_file_contents(path_to_code)
+
+        parser = PydanticOutputParser(pydantic_object=GitFile)        
+        prompt = PromptTemplate(
+            template="Given the file:\n{existing_file}\n\nPlease adjust it to fulfill the following change:\n{desired_change}\n. if the desired changed does not affect the file, please provide the same existing file as your response\nformat:{format_instructions}",
+            input_variables=["existing_file","desired_change"],
+            partial_variables={
+                "format_instructions": parser.get_format_instructions()
+            }
+        )            
+        chain = prompt | self._llm | parser
+        replacement_file = chain.invoke(
+            {
+                "existing_file": existing_file,
+                "desired_change": desired_change
+            }
+        ).file
+        
+        Autocoder._write_repo_file_contents(
+            path_to_code, 
+            replacement_file
         )
-        replacement_code = response.text.strip().strip("```").strip("python")
-        Autocoder._write_repo_file_contents(path_to_code, replacement_code)
-        return existing_code, replacement_code
+        return existing_file, replacement_file
 
     def create_commit(
         self,
@@ -155,17 +190,29 @@ class Autocoder:
         :rtype: str
         """
         if not commit_message:
-            commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}"
-
             try:
                 contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-                commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
             except:
                 logger.info("No existing CONTRIBUTING.md to use.")
+                contributing = 'use git best practices'
                 pass
-
-            response = self._llm.generate_content(commit_msg_prompt)
-            commit_message = response.text
+            
+            parser = PydanticOutputParser(pydantic_object=GitCommit)        
+            prompt = PromptTemplate(
+                template="Please provide a commit message outlining the change between the old and new code. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}\nformat:{format_instructions}",
+                input_variables=["existing_code","replacement_code"],
+                partial_variables={
+                    "format_instructions": parser.get_format_instructions()
+                }
+            )            
+            chain = prompt | self._llm | parser
+            commit_message = chain.invoke(
+                {
+                    "existing_code": existing_code,
+                    "replacement_code": replacement_code,
+                    "contributing": contributing
+                }
+            ).message
 
         commit_message += f"\n\nSigned-off-by: {author_name} <{author_email}>"
 
@@ -209,24 +256,30 @@ class Autocoder:
         :type commit_message: str
         """
         if not commit_message:
-            commit_msg_prompt = f"Please provide a commit message outlining the change between the old and new code. Provide just the commit message -- no need to title the message as 'commit message' or anything."
-
             try:
-                contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")
-                commit_msg_prompt += f"\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}"
+                contributing = self._fetch_repo_file_contents("CONTRIBUTING.md")                
             except:
                 logger.info("No existing CONTRIBUTING.md to use.")
+                contributing = 'use git best practices'
                 pass
 
-            response = self._llm.generate_content(commit_msg_prompt)
-            commit_message = response.text
+            parser = PydanticOutputParser(pydantic_object=GitCommit)        
+            prompt = PromptTemplate(
+                template="Please provide a commit message outlining the change between the old and new code. Provide just the commit message, your response will be inserted into a create PR request so it needs to be valid.\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}\nformat:{format_instructions}",
+                input_variables=["contributing"],
+                partial_variables={
+                    "format_instructions": parser.get_format_instructions()
+                }
+            )            
+            chain = prompt | self._llm | parser
+            commit_message = chain.invoke(
+                {
+                    "contributing": contributing
+                }
+            ).message
 
-        logger.info(f"repo_id: {repo_id}")
-        logger.info(f"issue_id: {issue_number}")
         repo = self._github.get_repo(repo_id)
-        logger.info(f"Repo owner: {repo.owner}")
         issues = repo.get_issues()
-        logger.info(issues)
         for issue_instance in issues:
             logger.info(issue_instance.title)
             logger.info(issue_instance.id)

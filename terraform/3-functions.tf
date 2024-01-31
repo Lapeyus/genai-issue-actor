@@ -87,7 +87,7 @@ resource "google_cloudfunctions2_function" "event_processor" {
     event_type            = "google.cloud.pubsub.topic.v1.messagePublished"
     pubsub_topic          = google_pubsub_topic.issue_processing_topic.id
     trigger_region        = var.region
-    # retry_policy          = "RETRY_POLICY_RETRY"
+    retry_policy          = "RETRY_POLICY_DO_NOT_RETRY"
   }
 
 

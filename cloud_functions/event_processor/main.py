@@ -22,8 +22,6 @@ llm = get_env_variable("GENAI_MODEL")
 @functions_framework.cloud_event
 def event_processor(cloud_event: CloudEvent) -> None:
     message_data = base64.b64decode(cloud_event.data["message"]["data"]).decode("utf-8")
-    logger.info(message_data)
-
     request_json = json.loads(message_data)
     logger.info(request_json)
 
@@ -57,9 +55,8 @@ def event_processor(cloud_event: CloudEvent) -> None:
 
         autocoder_app.push_remote()
         autocoder_app.create_pr(repo_id=git_repo_id, issue_number=issue_number)
+        logger.info("Issue processed successfully")
     except BaseException as e:
         logger.error(f"Error processing issue: {e}")
     finally:
         Autocoder.cleanup_local_dir()
-
-    logger.info("Issue processed successfully")
