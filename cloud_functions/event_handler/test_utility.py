@@ -2,10 +2,6 @@ import os
 import unittest
 from unittest.mock import patch
 
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
 from utility import get_env_variable
 from utility import parse_issue_body
 
