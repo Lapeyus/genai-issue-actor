@@ -38,7 +38,7 @@ jobs:
         python -m pip install --upgrade pip
     - name: Test cloud_function with unittest
       env:
-        PRIVATE_KEY: "testleu"
+        PRIVATE_KEY: "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK"
       run: |
         pip install -r cloud_functions/event_handler/requirements.txt
         python -m unittest discover cloud_functions/event_handler

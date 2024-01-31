@@ -7,12 +7,12 @@ from main import event_processor
 class TestEventProcessor(unittest.TestCase):
     @patch("main.Autocoder")  # Adjust this import path to where Autocoder is defined
     @patch.dict("os.environ", {
-        "PRIVATE_KEY": base64.b64encode(b"mock_private_key").decode("utf-8"),
-        "PUBLIC_KEY": base64.b64encode(b"mock_public_key").decode("utf-8"),
-        "PASS_KEY": base64.b64encode(b"mock_pass_key").decode("utf-8"),
+        "PRIVATE_KEY": "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK",
+        "PUBLIC_KEY": "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK",
+        "PASS_KEY": "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDN056N3FiQzU4ZUorZFRjZGNIUTNURXQybzdSTFFiU3VvMWNLK2EvUnhGVklQQVI5VlB1UXJ3UFlmS1RwUGR2aVBHTFVIVXl2YXh0dGRpcXkveXcrVEFvOVRYYit6TEZBbjZoeGN5TXhQa2ZhYjhqYUZ2dGR4U2xzZDhieU5nMFAzbytONVVZaVdKMUZPRTFiMzREVjVJamFEekg2ZGlnclJHNUZKM1RLRkxvL2c4dVF3OFpCbHViOVcvNzRzcEFBd2I3QmRWdnQvcXcrcUxBaXJ2ODA4elY1SjlzcHpObkdaRU1pUlUxaTl6c1dNcURWQ2RzR0t5VnNyT1NpZVE2V0lXRkVIMWR2QWZpS2pIWWIwVDg3QVJvQWJ0RTN4N05NQnB5alRiVmgvWEc2MUwvZVdrZWQzYUZ5ckRxYTlxVStDdDNMVko1Mmx4VkhhcHhLSXEzT3IganZpbGxhcnJlYWwK"
         "GEMINI_API_KEY": "mock_gemini_api_key",
         "GITHUB_PAT": "mock_github_pat",
-        "GENAI_MODEL": "gemini",
+        "GENAI_MODEL": "gemini", 
     }, clear=True)
     def test_event_processor_success(self, mock_autocoder):
         # Setup test data and mocks
