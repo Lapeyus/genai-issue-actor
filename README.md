@@ -1,6 +1,6 @@
 # genai-issue-actor
 
-Original Author: Evan Seabrook
+Original Author: Google Gemini
 
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
