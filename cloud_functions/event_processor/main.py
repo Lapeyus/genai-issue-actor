@@ -14,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 github_private_key = base64.b64decode(get_env_variable("PRIVATE_KEY")).decode("utf-8")
 github_public_key = base64.b64decode(get_env_variable("PUBLIC_KEY")).decode("utf-8")
 git_key_passphrase = base64.b64decode(get_env_variable("PASS_KEY")).decode("utf-8")
-gemini_api_key = get_env_variable("GEMINI_API_KEY")
+gegemini_api_key = get_env_variable("GEMINI_API_KEY")
 github_pat = get_env_variable("GITHUB_PAT")
 llm = get_env_variable("GENAI_MODEL")
 
@@ -63,3 +63,4 @@ def event_processor(cloud_event: CloudEvent) -> None:
         Autocoder.cleanup_local_dir()
 
     logger.info("Issue processed successfully")
+
