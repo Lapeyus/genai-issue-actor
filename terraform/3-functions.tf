@@ -52,7 +52,12 @@ resource "google_cloudfunctions2_function" "event_handler" {
       PROJECT_ID   = google_project.main.project_id
       PUBSUB_TOPIC = google_pubsub_topic.issue_processing_topic.name
     }
-
+    secret_environment_variables {
+      key        = "GITHUB_PAT"
+      project_id = google_project.main.project_id
+      secret     = google_secret_manager_secret.github_pat_secret.secret_id
+      version    = "latest"
+    }
   }
 }
 
