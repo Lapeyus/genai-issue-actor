@@ -1,6 +1,6 @@
 # genai-issue-actor
 
-Original Author: Evan Seabrook
+Original Author: lapeyus
 
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
@@ -34,3 +34,8 @@ If you are interested in experimenting with this project further, please fork it
 4. cd into the infrastructure folder and run `terraform apply`.
 5. Once the terraform creation process is done, add your secret versions into the secret manager.
 6. Set your GitHub webhook URL to the function and choose to be notified on new issues.
+
+
+Please adjust it to fulfill the following change:
+change the Original Author to lapeyus
+. if the desired changed does not affect the file, please provide the same existing file as your response
