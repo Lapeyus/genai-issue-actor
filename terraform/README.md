@@ -42,6 +42,7 @@
 | [google_project_service.cloudresourcemanager_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.compute_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.eventarc_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
+| [google_project_service.generativelanguage_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.iamcredentials_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.run](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_project_service.secretmanager_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
