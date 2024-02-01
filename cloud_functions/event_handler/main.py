@@ -1,6 +1,7 @@
 import json
 import logging
-
+import hmac
+import hashlib
 import functions_framework
 from google.cloud import pubsub_v1
 from utility import get_env_variable
@@ -12,6 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 project_id = get_env_variable("PROJECT_ID")
 pubsub_topic = get_env_variable("PUBSUB_TOPIC")
+github_pat = get_env_variable("GITHUB_PAT")
 
 publisher = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path(project_id, pubsub_topic)
@@ -19,6 +21,17 @@ topic_path = publisher.topic_path(project_id, pubsub_topic)
 
 @functions_framework.http
 def handle_issue(request):
+    # Verify the request
+    signature = request.headers.get('X-Hub-Signature-256')
+    sha_name, signature = signature.split('=')
+    if sha_name != 'sha256':
+        print('Error: wrong hash algorithm used')
+        return 'Invalid signature', 403
+    mac = hmac.new(github_pat.encode(), msg=request.data, digestmod=hashlib.sha256)
+    if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
+        print('Error: signature does not match')
+        return 'Invalid signature', 403
+    
     request_json = request.get_json(silent=True)
     return_headers = {"Content-Type": "application/json"}
 
