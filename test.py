@@ -13,7 +13,7 @@ from langchain_core.output_parsers import StrOutputParser
 
  
 
-model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="AIzaSyCKfZBlOZs0FHcnX3TtUlHzr4ai6mhuAjQ")
+model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="")
 
 
 class GitBranch(BaseModel):
