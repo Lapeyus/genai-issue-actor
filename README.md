@@ -1,6 +1,6 @@
 # genai-issue-actor
 
-Original Author: Evan Seabrook
+Original Author: lapeyus
 
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
@@ -11,8 +11,6 @@ This project was created to explore how Generative AI could help facilitate code
 3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI to interpret and make the requested changes.
 
 4. The Cloud Function pushes the changes to the repository and opens a pull request referencing the original issue.
-
-**IMPORTANT:** To prevent an influx of personal cloud costs, I have disabled the webhook. I encourage folks that are interested in this project to fork this repository and experiment with it yourselves.
 
 ## Project Structure
 
