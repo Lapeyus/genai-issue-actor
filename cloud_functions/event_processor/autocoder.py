@@ -16,22 +16,30 @@ REPO_DIR = "local_repo"
 
 class GitBranch(BaseModel):
     name: str = Field(description="valid name for a git branch")
-    
+
     @validator('name')
     def restrictions(cls, name):
         forbidden_chars = [' ', '/', '\\', '?', '*', ':', '..']
-        if any(char in name for char in forbidden_chars):
-            raise ValueError("Branch name cannot contain spaces, '/', '\\', '?', '*', ':', or '..'")
-        if name.startswith('.'):
-            raise ValueError("Branch name cannot start with a '.'")
-        if name.endswith('.'):
-            raise ValueError("Branch name cannot end with a '.'")
-        if len(name) > 255:
-            raise ValueError("Branch name cannot be longer than 255 characters")
+        if any(char in name for char in forbidden_chars) or name.startswith('.') or name.endswith('.'):
+            return cls.fix_branch_name(name)
+        return name
+
+    @classmethod
+    def fix_branch_name(cls, name):
+        forbidden_chars = [' ', '/', '\\', '?', '*', ':', '..']
+        for char in forbidden_chars:
+            name = name.replace(char, '_')
+        name = name.strip('.')
+        if name[0] in forbidden_chars:
+            name = name[1:]
+        if name[-1] in forbidden_chars:
+            name = name[:-1]
+        # Replace sequences of underscores caused by replacement with a single underscore
+        name = '_'.join(filter(None, name.split('_')))
         return name
     
 class GitFile(BaseModel):
-    file: str = Field(description="file contents")
+    file: str = Field(description="valid file contents")
 
     @validator('file')
     def validate_file_language(cls, v):
@@ -41,35 +49,27 @@ class GitFile(BaseModel):
             "perl", "prolog", "r", "scheme", "smalltalk", "tcl", "vim", "yaml"
         ]
         first_line = v.strip().splitlines()[0] if v.strip().splitlines() else ''
-        if first_line.startswith('```'):
-            lang = first_line[3:].split('```')[0].strip()
+        if first_line.startswith('```') and v.endswith('```'):
+            lang = first_line[3:].strip()
             if lang in recognized_languages:
-                raise ValueError(f"The file starts with a recognized language code block: ```{lang}``` which is not allowed.")
+                return cls.fix_language_block(v, lang)
         return v
 
+    @classmethod
+    def fix_language_block(cls, v, lang):
+        if v.startswith(f'```{lang}') and v.endswith('```'):
+            v = v[len(f'```{lang}'):].rstrip('```').strip()
+        return v
 
 class GitCommit(BaseModel):
     message: str = Field(description="a git commit message")
 
     @validator('message')
     def validate_message(cls, v):
-        forbidden_chars = ['#', '@', '<', '>', '|', '&', '*', '?', '"', "'", ':', '/', '\\', '$', '%', '^', '_', '-', '+', '=', '[', ']', '{', '}', '(', ')', ';', "'", ',', '.', '/', '\\', '*', '|', '"']
-        if len(v) > 50000:
-            raise ValueError("The commit message must be less than 50,000 characters long.")
-        if v != v.strip():
-            raise ValueError("The commit message must not contain any leading or trailing whitespace.")
-        if any(char in v for char in forbidden_chars):
-            raise ValueError("The commit message contains forbidden characters.")
-        if v.startswith('.'):
-            raise ValueError("The commit message must not start with a period (.)")
-        if v.endswith('.'):
-            raise ValueError("The commit message must not end with a period (.)")
-        if "  " in v:
-            raise ValueError("The commit message must not contain any consecutive spaces.")
-        if "\t\t" in v:
-            raise ValueError("The commit message must not contain any consecutive tabs.")
-        if "\n\n" in v or "\r\r" in v:
-            raise ValueError("The commit message must not contain any consecutive newlines or carriage returns.")
+        if v.startswith('```'):
+            raise ValueError("The commit message must not start with ('```')")
+        if v.endswith('```'):
+            raise ValueError("The commit message must not end with ('```')")
         
         return v
 
@@ -163,7 +163,7 @@ class Autocoder:
                 pass
             parser = PydanticOutputParser(pydantic_object=GitBranch)            
             prompt = PromptTemplate(
-                template="Create a branch name based on it's purpose:\n{desired_change}\nand this guidelines:\n{contributing}\nformat:{format_instructions}",
+                template="Create a branch name for this change:\n{desired_change}\nuse this guidelines:\n{contributing}\nEstrictly follow the format::{format_instructions}",
                 input_variables=["desired_change","contributing"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
@@ -171,11 +171,11 @@ class Autocoder:
             )            
             chain = prompt | self._llm | parser
             branch_name = chain.invoke(
-                {
-                    "desired_change": desired_change, 
-                    "contributing": contributing
-                }
-            ).name
+                    {
+                        "desired_change": desired_change, 
+                        "contributing": contributing
+                    }
+                ).name
         
         self._branch = self._local_repo.branches.local.create(branch_name, commit)
         self._branch.upstream = self._branch
@@ -196,7 +196,7 @@ class Autocoder:
 
         parser = PydanticOutputParser(pydantic_object=GitFile)        
         prompt = PromptTemplate(
-            template="Given the file:\n{existing_file}\n\nPlease adjust it to fulfill the following change:\n{desired_change}\n. if the desired changed does not affect the file, please provide the same existing file as your response\nformat:{format_instructions}",
+            template="Given the file:\n{existing_file}\n\nPlease adjust it to fulfill the following change:\n{desired_change}\nEstrictly follow the format:{format_instructions}",
             input_variables=["existing_file","desired_change"],
             partial_variables={
                 "format_instructions": parser.get_format_instructions()
@@ -249,7 +249,7 @@ class Autocoder:
             
             parser = PydanticOutputParser(pydantic_object=GitCommit)        
             prompt = PromptTemplate(
-                template="Please provide a commit message outlining the change between the old and new code. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}\nformat:{format_instructions}",
+                template="Please provide a commit message outlining the change between the old and new code. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}\n\nUse this guidelines:\n{contributing}\Estrictly follow the format:{format_instructions}",
                 input_variables=["existing_code","replacement_code"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
@@ -315,7 +315,7 @@ class Autocoder:
 
             parser = PydanticOutputParser(pydantic_object=GitCommit)        
             prompt = PromptTemplate(
-                template="Please provide a commit message outlining the change between the old and new code. Provide just the commit message, your response will be inserted into a create PR request so it needs to be valid.\n\nTake any commit structure instructions/examples into account from the following:\n{contributing}\nformat:{format_instructions}",
+                template="Please provide a commit message outlining the change between the old and new files. Provide just the commit message, your response will be inserted into a create PR request so it needs to be valid.\n\nUse this guidelines:\n{contributing}\Estrictly follow the format:{format_instructions}",
                 input_variables=["contributing"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
@@ -329,10 +329,10 @@ class Autocoder:
             ).message
 
         repo = self._github.get_repo(repo_id)
-        issues = repo.get_issues()
-        for issue_instance in issues:
-            logger.info(issue_instance.title)
-            logger.info(issue_instance.id)
+        # issues = repo.get_issues()
+        # for issue_instance in issues:
+        #     logger.info(issue_instance.title)
+        #     logger.info(issue_instance.id)
         issue = repo.get_issue(issue_number)
         repo.create_pull(
             base="main",
