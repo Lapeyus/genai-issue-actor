@@ -20,21 +20,29 @@ topic_path = publisher.topic_path(project_id, pubsub_topic)
 
 
 @functions_framework.http
-def handle_issue(request):
+def handle_issue(request):    
+    return_headers = {"Content-Type": "application/json"}
+
     # Verify the request
     signature = request.headers.get('X-Hub-Signature-256')
     sha_name, signature = signature.split('=')
     if sha_name != 'sha256':
         print('Error: wrong hash algorithm used')
-        return 'Invalid signature', 403
+        return (
+            json.dumps({"err": 'Invalid signature'}),
+            403,
+            return_headers,
+        )
     mac = hmac.new(github_pat.encode(), msg=request.data, digestmod=hashlib.sha256)
     if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
         print('Error: signature does not match')
-        return 'Invalid signature', 403
-    
+        return (
+            json.dumps({"err": 'Invalid signature'}),
+            403,
+            return_headers,
+        )
+        
     request_json = request.get_json(silent=True)
-    return_headers = {"Content-Type": "application/json"}
-
     if "action" not in request_json:
         logger.info("Request body does not include an action")
         return (
