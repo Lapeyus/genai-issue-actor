@@ -1,6 +1,4 @@
-# genai-issue-actor
-
-Original Author: Evan Seabrook
+Original Author: Joseph Villarreal
 
 This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
 
@@ -34,3 +32,24 @@ If you are interested in experimenting with this project further, please fork it
 4. cd into the infrastructure folder and run `terraform apply`.
 5. Once the terraform creation process is done, add your secret versions into the secret manager.
 6. Set your GitHub webhook URL to the function and choose to be notified on new issues.
+
+Please adjust it to fulfill the following change:
+change the author to Joseph Villarreal.
+ reply with the file contents with the desired change only, do not add any markdown wrapper, explanations or comments to your response. overal comply with the following format instructions but dont add the format instructions to your response:
+The output should be formatted as a JSON instance that conforms to the JSON schema below.
+
+As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}}, "required": ["foo"]
+the object {"foo": ["bar", "baz"]} is a well-formatted instance of the schema. The object {"properties": {"foo": ["bar", "baz"]}} is not well-formatted.
+
+Here is the output schema:
+
+{
+ "properties": {
+  "file": {
+   "title": "File",
+   "description": "valid file contents",
+   "type": "string"
+  }
+ },
+ "required": ["file"]
+}
