@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 import pygit2
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.pydantic_v1 import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -16,12 +16,62 @@ REPO_DIR = "local_repo"
 
 class GitBranch(BaseModel):
     name: str = Field(description="valid name for a git branch")
-
+    
+    @validator('name')
+    def restrictions(cls, name):
+        forbidden_chars = [' ', '/', '\\', '?', '*', ':', '..']
+        if any(char in name for char in forbidden_chars):
+            raise ValueError("Branch name cannot contain spaces, '/', '\\', '?', '*', ':', or '..'")
+        if name.startswith('.'):
+            raise ValueError("Branch name cannot start with a '.'")
+        if name.endswith('.'):
+            raise ValueError("Branch name cannot end with a '.'")
+        if len(name) > 255:
+            raise ValueError("Branch name cannot be longer than 255 characters")
+        return name
+    
 class GitFile(BaseModel):
     file: str = Field(description="file contents")
 
+    @validator('file')
+    def validate_file_language(cls, v):
+        recognized_languages = [
+            "python", "java", "c++", "javascript", "php", "ruby", "go", "swift", "kotlin", "scala",
+            "rust", "typescript", "coffeescript", "elixir", "erlang", "fortran", "haskell", "ocaml",
+            "perl", "prolog", "r", "scheme", "smalltalk", "tcl", "vim", "yaml"
+        ]
+        first_line = v.strip().splitlines()[0] if v.strip().splitlines() else ''
+        if first_line.startswith('```'):
+            lang = first_line[3:].split('```')[0].strip()
+            if lang in recognized_languages:
+                raise ValueError(f"The file starts with a recognized language code block: ```{lang}``` which is not allowed.")
+        return v
+
+
 class GitCommit(BaseModel):
     message: str = Field(description="a git commit message")
+
+    @validator('message')
+    def validate_message(cls, v):
+        forbidden_chars = ['#', '@', '<', '>', '|', '&', '*', '?', '"', "'", ':', '/', '\\', '$', '%', '^', '_', '-', '+', '=', '[', ']', '{', '}', '(', ')', ';', "'", ',', '.', '/', '\\', '*', '|', '"']
+        if len(v) > 50000:
+            raise ValueError("The commit message must be less than 50,000 characters long.")
+        if v != v.strip():
+            raise ValueError("The commit message must not contain any leading or trailing whitespace.")
+        if any(char in v for char in forbidden_chars):
+            raise ValueError("The commit message contains forbidden characters.")
+        if v.startswith('.'):
+            raise ValueError("The commit message must not start with a period (.)")
+        if v.endswith('.'):
+            raise ValueError("The commit message must not end with a period (.)")
+        if "  " in v:
+            raise ValueError("The commit message must not contain any consecutive spaces.")
+        if "\t\t" in v:
+            raise ValueError("The commit message must not contain any consecutive tabs.")
+        if "\n\n" in v or "\r\r" in v:
+            raise ValueError("The commit message must not contain any consecutive newlines or carriage returns.")
+        
+        return v
 
 class Autocoder:
     def __init__(
