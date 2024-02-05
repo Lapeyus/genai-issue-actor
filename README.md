@@ -1,6 +1,16 @@
 ```markdown
 # genai-issue-actor
 
+```mermaid
+flowchart TB
+    GitHubWebhooks[GitHub Webhooks] --> EventHandlerFunction["Event Handler Function\nFilters and forwards to Pub/Sub"]
+    EventHandlerFunction --> PubSub[Google Cloud Pub/Sub]
+    PubSub --> EventProcessorFunction["Event Processor Function\nOrchestrates automation"]
+    EventProcessorFunction --> AutocoderClass["Autocoder Class\nHandles Git operations and AI-driven code generation"]
+    AutocoderClass --> GitHub["GitHub\nFor PR creation and issue handling"]
+    AutocoderClass --> GCP["Google Cloud Platform\nFor cloud functions and AI model interactions"]
+```
+
 Original Author: Evan Seabrook
 
 This project delves into the potential of Generative AI to automate code changes based on GitHub issue submissions. It illustrates a modern approach to software development:
