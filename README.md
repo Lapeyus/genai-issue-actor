@@ -1,36 +1,51 @@
+```markdown
 # genai-issue-actor
 
 Original Author: Evan Seabrook
 
-This project was created to explore how Generative AI could help facilitate code changes based on issues created in a repository. To explore this, I designed a workflow following roughly how code is developed today in a simple project:
+This project delves into the potential of Generative AI to automate code changes based on GitHub issue submissions. It illustrates a modern approach to software development:
 
-1. A user submits a new issue within the GitHub repository outlining in plain language what change they would like to see.
-
-2. A webhook configured to fire for new issues posts the details to a Cloud Function hosted within my Google Cloud project, which clones the repository.
-
-3. Once the repo has been cloned, a new branch is created and the code is adapted using generative AI to interpret and make the requested changes.
-
-4. The Cloud Function pushes the changes to the repository and opens a pull request referencing the original issue.
-
-**IMPORTANT:** To prevent an influx of personal cloud costs, I have disabled the webhook. I encourage folks that are interested in this project to fork this repository and experiment with it yourselves.
-
-## Project Structure
-
-The project is split into several key directories/modules:
-
-- cloud_function
-  - Houses the webhook application code that handles new issues, makes code changes in `main.py` and `tests`, and pushes them to this repository + creates a pull request.
-- tests
-  - Houses the unit tests for `main.py`.
-- main.py
+1. Users submit issues in the GitHub repository, detailing requested changes in plain language.
+2. A webhook, set up for new issues, notifies a Google Cloud-hosted Cloud Function, which then clones the repository.
+3. The Cloud Function creates a new branch, where generative AI interprets and implements the proposed changes.
+4. Changes are pushed to the repository, and a pull request is opened, referencing the original issue.
 
 ## Deployment
 
-If you are interested in experimenting with this project further, please fork it. To set up the Cloud Function on GCP, you will need to:
+Fork this project to explore further. To deploy on GCP:
 
-1. Generate a personal access token for your GitHub account (it will need write permissions for Issues in your fork).
-2. Generate an RSA deploy key for your repository (it will need write access to your fork).
-3. Generate an API KEY for the Gemini API.
-4. cd into the infrastructure folder and run `terraform apply`.
-5. Once the terraform creation process is done, add your secret versions into the secret manager.
-6. Set your GitHub webhook URL to the function and choose to be notified on new issues.
+1. Generate a GitHub personal access token with issue write permissions.
+2. Generate an RSA deploy key with write access for your fork.
+3. Obtain an API KEY for the Gemini API.
+4. Run `terraform apply` in the infrastructure folder.
+5. Add secret versions to the Secret Manager.
+6. Set your GitHub webhook to notify this function on new issues.
+
+## New Features and Enhancements
+
+### Enhanced AI Integration
+
+The updated version integrates more advanced Generative AI models for nuanced code adaptation. This ensures more accurate and context-aware changes, directly from issue descriptions.
+
+### Security Improvements
+
+- **HMAC Verification for Webhooks**: Ensures integrity and authenticity of incoming requests, safeguarding against unauthorized alterations.
+- **Secret Management**: API keys and tokens are securely managed via GCP's Secret Manager, enhancing security and simplifying configuration.
+
+### Infrastructure as Code
+
+- **Terraform Deployment**: Simplified cloud resource management allows for easy setup and deployment of necessary infrastructure with minimal manual intervention.
+
+### Modular Code Structure
+
+- **Improved Modularity**: The application's architecture has been refactored for better separation of concerns, enhancing readability, maintainability, and scalability.
+- **Dynamic Branch Creation**: AI-driven logic for branch naming and creation facilitates a more streamlined development workflow.
+
+### Continuous Integration and Deployment
+
+- **Automated Testing and Deployment**: Integration with CI/CD pipelines ensures that changes are automatically tested and deployed, maintaining code quality and efficiency.
+
+### Conclusion
+
+The evolution of the `genai-issue-actor` project showcases the transformative potential of integrating Generative AI into development workflows. By automating the interpretation and implementation of issue-based code changes, it sets a new standard for efficiency and innovation in software development.
+```
