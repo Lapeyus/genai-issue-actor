@@ -1,4 +1,3 @@
-```markdown
 # genai-issue-actor
 
 ```mermaid
@@ -58,4 +57,3 @@ The updated version integrates more advanced Generative AI models for nuanced co
 ### Conclusion
 
 The evolution of the `genai-issue-actor` project showcases the transformative potential of integrating Generative AI into development workflows. By automating the interpretation and implementation of issue-based code changes, it sets a new standard for efficiency and innovation in software development.
-```
