@@ -64,14 +64,13 @@ class GitFile(BaseModel):
 class GitCommit(BaseModel):
     message: str = Field(description="a git commit message")
 
-    @validator('message')
-    def validate_message(cls, v):
-        if v.startswith('```'):
-            raise ValueError("The commit message must not start with ('```')")
-        if v.endswith('```'):
-            raise ValueError("The commit message must not end with ('```')")
-        
-        return v
+    # @validator('message')
+    # def validate_message(cls, v):
+    #     if v.startswith('```'):
+    #         raise ValueError("The commit message must not start with ('```')")
+    #     if v.endswith('```'):
+    #         raise ValueError("The commit message must not end with ('```')")        
+        # return v
 
 class Autocoder:
     def __init__(
