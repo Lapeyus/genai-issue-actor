@@ -5,7 +5,11 @@ import github
 from langchain_google_genai import ChatGoogleGenerativeAI
 import pygit2
 from langchain.prompts import PromptTemplate
-from langchain.output_parsers import PydanticOutputParser
+from langchain.output_parsers import (
+    OutputFixingParser,
+    PydanticOutputParser,
+    RetryOutputParser,
+)
 from langchain_core.pydantic_v1 import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
@@ -64,13 +68,18 @@ class GitFile(BaseModel):
 class GitCommit(BaseModel):
     message: str = Field(description="a git commit message")
 
-    # @validator('message')
-    # def validate_message(cls, v):
-    #     if v.startswith('```'):
-    #         raise ValueError("The commit message must not start with ('```')")
-    #     if v.endswith('```'):
-    #         raise ValueError("The commit message must not end with ('```')")        
-        # return v
+    @validator('message')
+    def validate_message(cls, v):
+        v = cls.fix_message(v) 
+        return v
+
+    @classmethod
+    def fix_message(cls, v):
+        if v.startswith('```'):
+            v = v[3:]
+        if v.endswith('```'):
+            v = v[:-3]
+        return v
 
 class Autocoder:
     def __init__(
@@ -160,9 +169,10 @@ class Autocoder:
                 logger.info("No existing CONTRIBUTING.md to use.")
                 contributing = 'git best practices'
                 pass
-            parser = PydanticOutputParser(pydantic_object=GitBranch)            
+            
+            parser = PydanticOutputParser(pydantic_object=GitBranch)                        
             prompt = PromptTemplate(
-                template="Create a branch name for this change:\n{desired_change}\nuse this guidelines:\n{contributing}\nformat:\n{format_instructions}",
+                template="Create a branch name for this change:\n{desired_change}\nuse this guidelines:\n{contributing}\nformat:\n{format_instructions}. DO NOT add any wrapper or comment to your response, just the branch name.",
                 input_variables=["desired_change","contributing"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
@@ -193,9 +203,9 @@ class Autocoder:
         """
         existing_file = self._fetch_repo_file_contents(path_to_code)
 
-        parser = PydanticOutputParser(pydantic_object=GitFile)        
+        parser = PydanticOutputParser(pydantic_object=GitFile)     
         prompt = PromptTemplate(
-            template="Given the file:\n{existing_file}\n\nPlease adjust it to fulfill the following change:\n{desired_change}.\n reply with the file contents with the desired change only, do not add any markdown wrapper, explanations or comments to your response. overal comply with the following format instructions but dont add the format instructions to your response:\n{format_instructions}",
+            template="Given the file:\n{existing_file}\n\nPlease adjust it to fulfill the following change:\n{desired_change}.\n reply with the file contents with the desired change only, do not add any markdown wrapper, explanations or comments to your response, just the file contents. overal comply with the following format instructions but dont add the format instructions to your response:\n{format_instructions}",
             input_variables=["existing_file","desired_change"],
             partial_variables={
                 "format_instructions": parser.get_format_instructions()
@@ -245,10 +255,10 @@ class Autocoder:
                 logger.info("No existing CONTRIBUTING.md to use.")
                 contributing = 'use git best practices'
                 pass
-            
+
             parser = PydanticOutputParser(pydantic_object=GitCommit)        
             prompt = PromptTemplate(
-                template="Please provide a commit message outlining the change between the old and new code. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}\n\nUse this guidelines:\n{contributing}\nformat:\n{format_instructions}",
+                template="Please provide a commit message outlining the change between the old and new code. Old code:\n{existing_code}\n\nNew code:\n{replacement_code}\n\nUse this guidelines:\n{contributing}\nformat:\n{format_instructions}. DO NOT add any markdown wrapper, explanations or comments to your response, just the commit message.",
                 input_variables=["existing_code","replacement_code"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
@@ -312,9 +322,9 @@ class Autocoder:
                 contributing = 'use git best practices'
                 pass
 
-            parser = PydanticOutputParser(pydantic_object=GitCommit)        
+            parser = PydanticOutputParser(pydantic_object=GitCommit)
             prompt = PromptTemplate(
-                template="Please provide a commit message outlining the change between the old and new files. Provide just the commit message, your response will be inserted into a create PR request so it needs to be valid.\n\nUse this guidelines:\n{contributing}\nformat:\n{format_instructions}",
+                template="Please provide a commit message outlining the change between the old and new files. Provide just the commit message, your response will be inserted into a create PR request so it needs to be valid.\n\nUse this guidelines:\n{contributing}\nformat:\n{format_instructions}. DO NOT add any wrapper or comment in your response, just the commit message.",
                 input_variables=["contributing"],
                 partial_variables={
                     "format_instructions": parser.get_format_instructions()
