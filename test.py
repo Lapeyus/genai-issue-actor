@@ -1,19 +1,5 @@
-import os
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
 
-from langchain.output_parsers import PydanticOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
-import os
-# from streamlit_feedback import streamlit_feedback
-from langchain_google_genai import ChatGoogleGenerativeAI
-import google.generativeai as genai
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.output_parsers import StrOutputParser
-
- 
-
-model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key="")
+model = ChatGoogleGenerativeAI(model="bison-text", google_api_key="")
 
 
 class GitBranch(BaseModel):
