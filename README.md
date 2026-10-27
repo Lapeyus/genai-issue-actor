@@ -1,5 +1,61 @@
 # genai-issue-actor
 
+Turns GitHub issues into pull requests with generative AI. You open an issue that describes a change, and two
+Google Cloud Functions clone the repo, ask Gemini to rewrite the affected files, commit and push a branch, and open a
+PR linked to the issue.
+
+![GenAI GitHub workflow](assets/genai_gh_workflow.png)
+
+## Contents
+
+- [Description](#description)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Requirements](#requirements)
+- [Deployment](#deployment)
+- [Usage](#usage)
+- [Repository layout](#repository-layout)
+- [Configuration](#configuration)
+- [Tests](#tests)
+- [Status and known limitations](#status-and-known-limitations)
+- [License](#license)
+- [Background and design notes](#background-and-design-notes)
+
+## Description
+
+This project explores how far generative AI can go in automating code changes from GitHub issue submissions. It
+shows a modern approach to software development:
+
+1. A user opens an issue in the GitHub repository and describes the requested change in plain language. The issue
+   template wraps the request in a small JSON block.
+2. A webhook for new issues calls a Cloud Function, which checks the request and queues it on Pub/Sub.
+3. A second Cloud Function clones the repository, creates a new branch, and has Gemini interpret and apply the
+   requested change to each affected file.
+4. The changes are pushed, and a pull request that references the original issue is opened.
+
+It is meant for developers and platform engineers who want to try LLM-driven code changes in a GitHub + GCP setup.
+This is an extended fork of an original concept by Evan Seabrook (see
+[Background and design notes](#background-and-design-notes)).
+
+## Features
+
+- **Fast webhook acknowledgment:** `event_handler` (HTTP) checks the `X-Hub-Signature-256` HMAC, filters events,
+  parses the JSON change request from the issue body, publishes it to Pub/Sub, and returns right away. This avoids
+  GitHub webhook timeouts while the LLM is working.
+- **Event filtering:** the handler ignores payloads with no `action`, issues that already have an assignee, and any
+  action other than `opened`.
+- **Asynchronous processing:** `event_processor` (Pub/Sub CloudEvent) runs the `Autocoder` workflow: clone over SSH
+  with a deploy key (`pygit2`), create a branch, rewrite each file, commit, push, and open a PR (`PyGithub`).
+- **LLM-generated Git artifacts:** branch names, file contents, commit messages, and the PR body come from LangChain
+  `PromptTemplate | ChatGoogleGenerativeAI | PydanticOutputParser` chains. Pydantic validators clean up branch names,
+  code fences, and commit messages. If the target repo has a `CONTRIBUTING.md`, its guidelines go into the prompts.
+- **Infrastructure as code:** Terraform for the folder, project, APIs, Secret Manager secrets, both Cloud Functions
+  (gen2, Python 3.12), the Pub/Sub topic, a GCS state bucket, and Workload Identity Federation for GitHub Actions.
+- **CI:** GitHub Actions run the unit tests (`python-app.yml`) and TFLint, Checkov, `terraform fmt`, and
+  terraform-docs (`terraform.yml`). Pre-commit hooks are included.
+
+## Architecture
+
 ```mermaid
 flowchart TB
     GitHubWebhooks[GitHub Webhooks] --> EventHandlerFunction["Event Handler Function\nFilters and forwards to Pub/Sub"]
@@ -10,12 +66,64 @@ flowchart TB
     AutocoderClass --> GCP["Google Cloud Platform\nFor cloud functions and AI model interactions"]
 ```
 
-This project delves into the potential of Generative AI to automate code changes based on GitHub issue submissions. It illustrates a modern approach to software development:
+Request flow, step by step:
 
-1. Users submit issues in the GitHub repository, detailing requested changes in plain language.
-2. A webhook, set up for new issues, notifies a Google Cloud-hosted Cloud Function, which then clones the repository.
-3. The Cloud Function creates a new branch, where generative AI interprets and implements the proposed changes.
-4. Changes are pushed to the repository, and a pull request is opened, referencing the original issue.
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant GH as GitHub
+    participant H as event_handler<br/>(Cloud Function, HTTP)
+    participant T as Pub/Sub<br/>issue-processing-topic
+    participant P as event_processor<br/>(Cloud Function, CloudEvent)
+    participant G as Gemini<br/>(GENAI_MODEL)
+
+    U->>GH: Open issue (template with change_request JSON)
+    GH->>H: POST issues webhook + X-Hub-Signature-256
+    H->>H: Verify HMAC, filter (action, assignee, opened)
+    H->>H: parse_issue_body → {"change_request": {...}}
+    H->>T: publish(payload)
+    H-->>GH: 200 {"msg": "ok"}
+    T->>P: messagePublished (no retries)
+    P->>GH: git clone over SSH (deploy key)
+    P->>G: Branch name (desired change + CONTRIBUTING.md)
+    loop each affected file
+        P->>G: Rewrite file to fulfill the change
+        P->>G: Commit message (old vs new)
+        P->>P: commit
+    end
+    P->>GH: git push branch
+    P->>G: PR description
+    P->>GH: create_pull(base=main, issue=#n)
+    P->>P: delete local clone
+```
+
+Infrastructure created by `terraform/`:
+
+```mermaid
+flowchart LR
+    subgraph proj["GCP project (in a new folder)"]
+        sm[(Secret Manager<br/>github-pat · private-key · public-key<br/>git-key-passphrase · gemini-api-key)]
+        gcs[(GCS bucket<br/>function source zips)]
+        h[event_handler<br/>gen2 · python312 · public invoker]
+        t[[Pub/Sub topic<br/>issue-processing-topic]]
+        p[event_processor<br/>gen2 · python312 · internal ingress]
+        st[(GCS bucket<br/>Terraform state)]
+        wif[WIF pool github-terraformer<br/>+ tf-service-account]
+    end
+    gcs --> h & p
+    sm -. env secrets .-> h & p
+    h --> t --> p
+    gha[GitHub Actions] -. OIDC .-> wif
+```
+
+## Requirements
+
+- A Google Cloud organization or folder, a billing account, and Terraform `>= 1.5.6` (CI pins 1.5.6).
+- A GitHub repository to act on. The functions clone it over SSH and open PRs against `main`.
+- A GitHub personal access token that can create pull requests and read issues.
+- An SSH key pair registered as a **deploy key with write access** on the target repository.
+- A Gemini API key (the Generative Language API).
+- For local tests: Python 3.11+ (CI uses 3.11.7, and the functions run on 3.12).
 
 ## Deployment
 
@@ -23,11 +131,121 @@ Fork this project to explore further. To deploy on GCP:
 
 1. Generate a GitHub personal access token with issue write permissions.
 2. Generate an RSA deploy key with write access for your fork.
-3. Obtain an API KEY for the Gemini API.
-4. Run `terraform apply` in the infrastructure folder.
-5. Add secret versions to the Secret Manager.
-6. Set your GitHub webhook to notify this function on new issues.
+3. Get an API key for the Gemini API.
+4. Set the Terraform variables and providers (see [Configuration](#configuration)). `tf-providers.tf` hard-codes a
+   GCS backend bucket and a provider project, so change both for your environment.
+5. Run `terraform init && terraform apply` in `terraform/`. The output `function_uri` is the webhook URL.
+6. Add real secret versions in Secret Manager. Terraform only writes placeholder values. The function code expects
+   `private-key`, `public-key`, and `git-key-passphrase` to be **base64-encoded**.
+7. In the target repo, create a webhook for **Issues** events that points to `function_uri`, with content type
+   `application/json`. The handler checks the signature with the value of the `github-pat` secret, so the webhook
+   secret must be that same value.
+8. Optionally, copy `.github/ISSUE_TEMPLATE/genai-request-a-code-change-or-upgrade.md` into the target repo.
 
+## Usage
+
+Open an issue whose body has a fenced `json` block in this shape (the issue template provides it):
+
+```json
+{
+  "change_request": {
+    "description": "Description of the change",
+    "affected_files": ["main.py"]
+  }
+}
+```
+
+- `description`: the change, in natural language.
+- `affected_files`: paths, relative to the repo root, that the model rewrites one at a time.
+
+The issue must be newly opened and unassigned. After a short wait, a branch and a PR against `main` show up, linked
+to the issue. Function logs are in Cloud Logging.
+
+## Repository layout
+
+```text
+.
+├── cloud_functions/
+│   ├── event_handler/          # HTTP function: HMAC check, filters, parse issue JSON, publish to Pub/Sub
+│   │   ├── main.py             # handle_issue
+│   │   ├── utility.py          # parse_issue_body, get_env_variable
+│   │   └── test_main.py, test_utility.py
+│   └── event_processor/        # Pub/Sub function: Autocoder workflow
+│       ├── main.py             # event_processor
+│       ├── autocoder.py        # Autocoder + GitBranch/GitFile/GitCommit Pydantic models
+│       ├── utility.py
+│       └── test_main.py
+├── terraform/                  # numbered files: 0-project, 1-apis, 2-secrets, 3-functions, 4-pubsub, 5-github (WIF)
+├── assets/genai_gh_workflow.png
+├── test.py                     # scratch script for trying LangChain prompts by hand (not a test suite)
+├── .github/
+│   ├── workflows/python-app.yml, terraform.yml
+│   └── ISSUE_TEMPLATE/genai-request-a-code-change-or-upgrade.md
+├── CONTRIBUTING.md             # Conventional Commits guide (also fed to the LLM prompts)
+├── .pre-commit-config.yaml, .checkov.yml, .markdownlint.json
+└── LICENSE                     # Apache 2.0
+```
+
+## Configuration
+
+**Terraform variables** (`terraform/tf-variables.tf`): `folder_display_name`, `parent`, `org`, `project_name`,
+`project_id`, `billing_account`, `region` (default `us-central1`), `github_owner`, `github_repo` (default
+`genai-issue-actor`), and `llm` (default `gemini-pro`). Put them in a `*.tfvars` file. `.gitignore` excludes
+`*.tfvars`, state files, `.terraform/`, and `*.zip`.
+
+**Function environment** (set by Terraform):
+
+| Variable | Function | Source |
+|----------|----------|--------|
+| `PROJECT_ID`, `PUBSUB_TOPIC` | both | plain env |
+| `GITHUB_PAT` | both | secret `github-pat`. Also used as the webhook HMAC key |
+| `PRIVATE_KEY`, `PUBLIC_KEY`, `PASS_KEY` | processor | secrets `private-key`, `public-key`, `git-key-passphrase` (base64) |
+| `GEMINI_API_KEY` | processor | secret `gemini-api-key` |
+| `GENAI_MODEL`, `LOCATION` | processor | `var.llm`, `var.region` |
+
+Never commit real keys. Add them only as Secret Manager versions.
+
+## Tests
+
+```bash
+cd cloud_functions/event_handler
+pip install -r requirements.txt
+GITHUB_PAT=dummy python -m unittest discover .
+
+cd ../event_processor
+pip install -r requirements.txt
+python -m unittest discover .
+```
+
+Result for `event_handler` on 2026-10-27 (with only `functions-framework` and `google-cloud-pubsub` installed):
+**9 tests, 5 pass, 4 errors.** The `parse_issue_body` tests pass. The four `handle_issue` tests fail because their
+mock request has no `X-Hub-Signature-256` header, which became required when HMAC verification was added. The
+`event_processor` tests were not run during this documentation pass.
+
+## Status and known limitations
+
+- **Status:** experiment, inactive. The commits are from 2024-01-01 to 2024-02-08.
+- One PAT secret is used both as the GitHub API token and as the webhook HMAC key.
+- If the signature header is missing, `handle_issue` raises an exception instead of returning 403.
+- `event_processor` has a 60-second timeout and Pub/Sub retries are turned off. Long LLM calls or large repos can be
+  cut off without any retry, and errors are only logged.
+- PRs always target `main`. The model rewrites each file completely, and there are no tests or checks on the
+  generated code before it is pushed.
+- Anyone who can open an issue in the target repo can trigger a run, which costs LLM and compute usage.
+- `event_processor` runs as the default Compute Engine service account.
+- The `update_unit_tests` step described below is not implemented in the current `Autocoder`.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
+
+---
+
+## Background and design notes
+
+The sections below are the original write-up of how the project evolved from a single-script Cloud Function to the
+current two-function, event-driven design. They are kept as written. The code snippets are illustrative, so use
+`cloud_functions/` as the source of truth.
 
 ### Introduction: A New Chapter in Automation
 
